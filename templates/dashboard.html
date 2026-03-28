@@ -1,0 +1,156 @@
+﻿{% extends "base.html" %}
+
+{% block title %}首页{% endblock %}
+
+{% block content %}
+<section class="dashboard-shell">
+    <header class="dash-greeting dash-greeting-row">
+        <div>
+            <h2>记录</h2>
+            <p class="dash-subtitle">{{ month_label }} · 写作 / 游戏 / 阅读</p>
+        </div>
+        <details class="month-dropdown" data-month-dropdown>
+            <summary class="month-dropdown-trigger">
+                <span class="month-dropdown-label">{{ month_button_label }}</span>
+                <span class="month-dropdown-arrow">▾</span>
+            </summary>
+            <form method="get" class="month-dropdown-panel" data-month-form>
+                <input type="hidden" name="month" value="{{ selected_month }}" data-month-input>
+                <p class="month-wheel-hint">滚轮移动光标，点击时间确认</p>
+                <div class="month-option-list" data-month-list></div>
+            </form>
+        </details>
+    </header>
+
+    <section class="dash-kpi-grid">
+        <article class="dash-kpi-card">
+            <h3>文章记录</h3>
+            <div class="dash-kpi-item">
+                <span class="kpi-dot blue">文</span>
+                <div>
+                    <p>累计文章</p>
+                    <strong class="kpi-value" data-count="{{ stat_total_articles }}">0</strong>
+                </div>
+            </div>
+            <div class="dash-kpi-item">
+                <span class="kpi-dot cyan">月</span>
+                <div>
+                    <p>本月新增</p>
+                    <strong class="kpi-value" data-count="{{ stat_month_articles }}">0</strong>
+                </div>
+            </div>
+        </article>
+
+        <article class="dash-kpi-card">
+            <h3>游戏记录</h3>
+            <div class="dash-kpi-item">
+                <span class="kpi-dot yellow">时</span>
+                <div>
+                    <p>当月游戏时长</p>
+                    <strong><span class="kpi-value" data-count="{{ stat_month_game_hours }}">0</span>h</strong>
+                </div>
+            </div>
+            <div class="dash-kpi-item">
+                <span class="kpi-dot pink">活</span>
+                <div>
+                    <p>活跃游戏</p>
+                    <strong class="kpi-value" data-count="{{ stat_active_games }}">0</strong>
+                </div>
+            </div>
+        </article>
+
+        <article class="dash-kpi-card">
+            <h3>阅读记录</h3>
+            <div class="dash-kpi-item">
+                <span class="kpi-dot purple">书</span>
+                <div>
+                    <p>累计书籍</p>
+                    <strong class="kpi-value" data-count="{{ stat_total_books }}">0</strong>
+                </div>
+            </div>
+            <div class="dash-kpi-item">
+                <span class="kpi-dot green">月</span>
+                <div>
+                    <p>本月读书</p>
+                    <strong class="kpi-value" data-count="{{ stat_month_books }}">0</strong>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="dash-analysis">
+        <div class="dash-analysis-head">
+            <h3>记录分析</h3>
+        </div>
+
+        <div class="dash-analysis-grid">
+            <article class="dash-panel calendar-panel">
+                <h4>写作日历</h4>
+                <div class="calendar-weekdays">
+                    <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                </div>
+                <div class="calendar-grid" id="dashboardCalendar">
+                    {% for week in calendar_weeks %}
+                        {% for cell in week %}
+                            {% if cell.in_month %}
+                                <a href="?month={{ selected_month }}&day={{ cell.date }}" class="calendar-cell calendar-day-link level-{{ cell.level }} {% if selected_day == cell.date %}active{% endif %}">{{ cell.day }}</a>
+                            {% else %}
+                                <span class="calendar-cell out-month">{{ cell.day }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="dash-panel day-article-panel" id="dayArticlePanel">
+                {% include "partials/day_articles_panel.html" %}
+            </article>
+        </div>
+        <article class="dash-panel daily-bars-panel">
+            <h4>本月游戏复式条形图</h4>
+            <div class="daily-chart-shell">
+                <div class="daily-axis-y">
+                    <span>{{ daily_axis_max }}h</span>
+                    <span>{{ daily_axis_mid }}h</span>
+                    <span>0h</span>
+                </div>
+                <div class="daily-bars-wrap">
+                    {% for row in daily_game_chart_display %}
+                        {% if row.kind == "game_free" %}
+                            <div class="daily-game-free-merged" style="width: {{ row.width_px }}px;" title="{{ row.start_day }} - {{ row.end_day }}">
+                                <span class="game-free-mark">Game-free</span>
+                            </div>
+                        {% else %}
+                            <div class="daily-bar-col">
+                                <div class="daily-bar-stack">
+                                    <div class="daily-bar-item">
+                                        <span class="daily-bar-value">{{ row.max_hours }}</span>
+                                        <span class="daily-bar max" style="height: {{ row.max_height }}%;" title="单日最长游戏 {{ row.max_hours }}h"></span>
+                                    </div>
+                                    <div class="daily-bar-item">
+                                        <span class="daily-bar-value">{{ row.total_hours }}</span>
+                                        <span class="daily-bar total" style="height: {{ row.total_height }}%;" title="单日总时长 {{ row.total_hours }}h"></span>
+                                    </div>
+                                </div>
+                                <span class="daily-max-cover" title="{{ row.max_game_name|default:'暂无数据' }}">
+                                    {% if row.max_cover_url %}
+                                        <img src="{{ row.max_cover_url }}" alt="{{ row.max_game_name }}">
+                                    {% else %}
+                                        <span class="daily-cover-empty">-</span>
+                                    {% endif %}
+                                </span>
+                                <span class="daily-bar-day">{{ row.day }}</span>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <p class="daily-axis-x">日期（本月）</p>
+            <div class="daily-bar-legend">
+                <span><i class="legend-dot max"></i>本日最长游戏时长</span>
+                <span><i class="legend-dot total"></i>本日总时长</span>
+            </div>
+        </article>
+    </section>
+</section>
+{% endblock %}

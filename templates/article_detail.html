@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <a class="text-link" href="{% url 'articles' %}">返回文章列表</a>
+</section>
+<article class="card article-full">
+    <h2>{{ article.title }}</h2>
+    <p class="meta">{{ article.date }}</p>
+    <div class="article-content">{{ article.content|linebreaks }}</div>
+</article>
+{% endblock %}

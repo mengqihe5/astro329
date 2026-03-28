@@ -1,0 +1,97 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}文章{% endblock %}
+
+{% block content %}
+<section class="page-head page-head-row">
+    <div>
+        <h2>文章</h2>
+        <div class="page-note-spacer"></div>
+    </div>
+    <div class="mode-switch-wrap">
+        <div class="mode-switch">
+            <div class="timeline-combo {% if mode == 'timeline' %}active{% endif %}">
+                <a href="{% url 'articles' %}?mode=timeline&order=desc" class="timeline-main">时间轴</a>
+                <details class="timeline-sort">
+                    <summary class="timeline-sort-trigger">⇅</summary>
+                    <div class="sort-panel">
+                        <a href="{% url 'articles' %}?mode=timeline&order=desc" class="sort-item {% if order == 'desc' %}active{% endif %}">降序</a>
+                        <a href="{% url 'articles' %}?mode=timeline&order=asc" class="sort-item {% if order == 'asc' %}active{% endif %}">升序</a>
+                    </div>
+                </details>
+            </div>
+            <a href="{% url 'articles' %}?mode=tag&tag={{ selected_tag }}" class="switch-link {% if mode == 'tag' %}active{% endif %}">标签</a>
+        </div>
+    </div>
+</section>
+
+{% if mode == "tag" %}
+    <section class="tag-filter">
+        <a href="{% url 'articles' %}?mode=tag&tag=all" class="chip {% if selected_tag == 'all' %}active{% endif %}">全部</a>
+        {% for tag in all_tags %}
+            <a href="{% url 'articles' %}?mode=tag&tag={{ tag }}" class="chip {% if selected_tag == tag %}active{% endif %}">{{ tag }}</a>
+        {% endfor %}
+    </section>
+
+    {% for group in tag_groups %}
+        <section class="timeline-block">
+            <h3 class="timeline-title"># {{ group.tag }}</h3>
+            <div class="card-grid">
+                {% for article in group.articles %}
+                    <a href="{% url 'article_detail' article.slug %}" class="card card-link article-card">
+                        <div class="card-media article-media">
+                            <img src="{% static article.cover %}" alt="{{ article.title }} 封面">
+                        </div>
+                        <div class="card-body">
+                            <h3>{{ article.title }}</h3>
+                            <p class="meta article-date">{{ article.date }}</p>
+                            <p class="meta article-tags">
+                                {% for tag in article.tags %}
+                                    <span class="article-tag-chip">{{ tag }}</span>
+                                {% empty %}
+                                    <span class="article-tag-chip">未分类</span>
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% empty %}
+        <article class="card">
+            <p>还没有可显示的文章标签。</p>
+        </article>
+    {% endfor %}
+{% else %}
+    {% for block in timeline_groups %}
+        <section class="timeline-block">
+            <h3 class="timeline-title">{{ block.month_label }}</h3>
+            <div class="card-grid">
+                {% for article in block.items %}
+                    <a href="{% url 'article_detail' article.slug %}" class="card card-link article-card">
+                        <div class="card-media article-media">
+                            <img src="{% static article.cover %}" alt="{{ article.title }} 封面">
+                        </div>
+                        <div class="card-body">
+                            <h3>{{ article.title }}</h3>
+                            <p class="meta article-date">{{ article.date }}</p>
+                            <p class="meta article-tags">
+                                {% for tag in article.tags %}
+                                    <span class="article-tag-chip">{{ tag }}</span>
+                                {% empty %}
+                                    <span class="article-tag-chip">未分类</span>
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% empty %}
+        <article class="card">
+            <p>文章目录还没有内容，请先在 `content/articles/` 新增 Markdown 文件。</p>
+        </article>
+    {% endfor %}
+{% endif %}
+{% endblock %}

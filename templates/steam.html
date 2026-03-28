@@ -1,0 +1,56 @@
+﻿{% extends "base.html" %}
+
+{% block title %}游戏记录（Steam）{% endblock %}
+
+{% block content %}
+<section class="page-head page-head-row">
+    <div>
+        <h2>游戏记录（Steam）</h2>
+        <div class="page-note-spacer"></div>
+    </div>
+    <div class="steam-control-group">
+        <div class="mode-switch">
+            <details class="month-dropdown steam-month-dropdown {% if sort_by == 'month' %}active{% endif %}" data-month-dropdown>
+                <summary class="switch-link month-switch-trigger {% if sort_by == 'month' %}active{% endif %}">
+                    <span class="month-dropdown-label">{{ month_button_label }}</span>
+                    <span class="month-dropdown-arrow">▾</span>
+                </summary>
+                <form method="get" class="month-dropdown-panel" data-month-form>
+                    <input type="hidden" name="sort" value="month">
+                    <input type="hidden" name="month" value="{{ selected_month }}" data-month-input>
+                    <p class="month-wheel-hint">滚轮移动光标，点击时间确认</p>
+                    <div class="month-option-list" data-month-list></div>
+                </form>
+            </details>
+            <a href="{% url 'steam' %}?sort=total&month={{ selected_month }}" class="switch-link {% if sort_by == 'total' %}active{% endif %}">总时长</a>
+        </div>
+    </div>
+</section>
+<section class="card-grid steam-grid">
+    {% for game in games %}
+        <article class="card">
+            <div class="card-media game-media">
+                {% if game.cover_url %}
+                    <img src="{{ game.cover_url }}" alt="{{ game.name }} 封面">
+                {% else %}
+                    <span>Steam</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <h3>{{ game.name }}</h3>
+                <div class="progress-head meta">
+                    <span>本月：{{ game.month_hours }}h</span>
+                    <span>总时长：{{ game.playtime_hours }}h</span>
+                </div>
+                <div class="playtime-track">
+                    <div class="playtime-fill" style="width: {{ game.ratio }}%;"></div>
+                </div>
+            </div>
+        </article>
+    {% empty %}
+        <article class="card">
+            <p>当前没有可显示的游戏数据。</p>
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}
