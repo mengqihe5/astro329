@@ -69,7 +69,7 @@ const timelineGroups = groupByMonth(
           tagGroups.map((group) => (
             <section class="timeline-block">
               <h3 class="timeline-title"># {group.tag}</h3>
-              <div class="card-grid">
+              <div class="card-grid article-grid">
                 {group.articles.map((article) => (
                   <a href={`/articles/${article.slug}/`} class="card card-link article-card">
                     <div class="card-media article-media">
@@ -97,7 +97,7 @@ const timelineGroups = groupByMonth(
       timelineGroups.map((block) => (
         <section class="timeline-block">
           <h3 class="timeline-title">{block.monthLabel}</h3>
-          <div class="card-grid">
+          <div class="card-grid article-grid">
             {block.items.map((article) => (
               <a href={`/articles/${article.slug}/`} class="card card-link article-card">
                 <div class="card-media article-media">

@@ -235,11 +235,61 @@
         });
     });
 
+    const initDayArticlePagination = function (panel) {
+        if (!panel) return;
+        const grid = panel.querySelector(".day-article-grid");
+        if (!grid) return;
+
+        const oldPager = panel.querySelector(".day-article-pagination");
+        if (oldPager) {
+            oldPager.remove();
+        }
+
+        const cards = Array.from(grid.querySelectorAll(".day-article-card"));
+        if (cards.length === 0) return;
+
+        const pageSize = 4;
+        const totalPages = Math.max(1, Math.ceil(cards.length / pageSize));
+        let currentPage = 1;
+
+        const pager = document.createElement("div");
+        pager.className = "day-article-pagination";
+
+        const pageButtons = [];
+        const renderPage = function (pageNumber) {
+            currentPage = Math.min(Math.max(1, pageNumber), totalPages);
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            cards.forEach(function (card, index) {
+                card.style.display = index >= start && index < end ? "" : "none";
+            });
+            pageButtons.forEach(function (button, idx) {
+                button.classList.toggle("active", idx + 1 === currentPage);
+            });
+        };
+
+        for (let page = 1; page <= totalPages; page += 1) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "day-page-btn";
+            button.textContent = String(page);
+            button.addEventListener("click", function () {
+                renderPage(page);
+            });
+            pageButtons.push(button);
+            pager.appendChild(button);
+        }
+
+        grid.insertAdjacentElement("afterend", pager);
+        renderPage(1);
+    };
+
     // Dashboard calendar: fetch right-side article panel without full page reload.
     const calendarGrid = document.getElementById("dashboardCalendar");
     const articlePanel = document.getElementById("dayArticlePanel");
     if (calendarGrid && articlePanel) {
         const dayArticleCache = new Map();
+        initDayArticlePagination(articlePanel);
 
         calendarGrid.addEventListener("click", function (event) {
             const dayLink = event.target.closest("a.calendar-day-link");
@@ -260,6 +310,7 @@
 
             if (dayArticleCache.has(cacheKey)) {
                 articlePanel.innerHTML = dayArticleCache.get(cacheKey);
+                initDayArticlePagination(articlePanel);
                 calendarGrid.querySelectorAll(".calendar-day-link.active").forEach(function (node) {
                     node.classList.remove("active");
                 });
@@ -283,6 +334,7 @@
                 .then(function (html) {
                     dayArticleCache.set(cacheKey, html);
                     articlePanel.innerHTML = html;
+                    initDayArticlePagination(articlePanel);
                     calendarGrid.querySelectorAll(".calendar-day-link.active").forEach(function (node) {
                         node.classList.remove("active");
                     });

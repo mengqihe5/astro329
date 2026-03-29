@@ -471,6 +471,12 @@ body[data-theme="dark"] .icon-moon {
     gap: 14px;
 }
 
+.article-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    row-gap: 20px;
+    column-gap: 40px;
+}
+
 .steam-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
@@ -485,6 +491,7 @@ body[data-theme="dark"] .icon-moon {
 
 .books-grid {
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 8px 4px;
 }
 
 .card {
@@ -533,12 +540,20 @@ body[data-theme="dark"] .icon-moon {
     line-height: 1.35;
 }
 
+.article-card .card-body {
+    padding: 8px 12px 8px;
+}
+
+.article-card .article-media {
+    aspect-ratio: 16 / 6;
+}
+
 .article-card .card-body h3 {
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 .article-date {
-    margin-top: 12px;
+    margin-top: 6px;
 }
 
 .book-card .card-body {
@@ -553,6 +568,8 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .book-card .book-media {
+    width: 90%;
+    margin: 0 auto;
     border-radius: 12px;
     border: 1px solid var(--border);
     overflow: hidden;
@@ -586,10 +603,15 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .article-tags {
-    margin-top: 10px;
+    margin-top: 7px;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.article-card .article-tags {
+    margin-top: 4px;
+    margin-bottom: 0;
 }
 
 .article-tag-chip {
@@ -974,16 +996,22 @@ body[data-theme="dark"] .icon-moon {
 
 .day-article-panel {
     min-height: 500px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+}
+
+.day-article-panel h4 {
+    margin: 0 0 20px;
 }
 
 .day-article-grid {
-    margin-top: 10px;
+    margin-top: 0;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    max-height: 430px;
-    overflow-y: auto;
-    padding-right: 4px;
+    column-gap: 12px;
+    row-gap: 24px;
+    align-content: center;
+    padding-right: 2px;
 }
 
 .day-article-card {
@@ -1051,6 +1079,35 @@ body[data-theme="dark"] .icon-moon {
 
 .day-article-grid > .meta {
     grid-column: 1 / -1;
+    align-self: start;
+}
+
+.day-article-pagination {
+    margin-top: 0;
+    padding-top: 10px;
+    padding-bottom: 4px;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.day-page-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(131, 164, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e8f1ff;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.day-page-btn.active {
+    background: rgba(255, 208, 116, 0.3);
+    border-color: rgba(255, 208, 116, 0.62);
+    color: #fff7e5;
 }
 
 .game-rank-panel {
@@ -1152,9 +1209,10 @@ body[data-theme="dark"] .icon-moon {
 
 .daily-game-free-merged .game-free-mark {
     max-width: none;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 6px 8px;
+    font-size: 12px;
     border-radius: 10px;
+    white-space: nowrap;
 }
 
 .daily-bar-item {
@@ -1223,17 +1281,27 @@ body[data-theme="dark"] .icon-moon {
     line-height: 1;
 }
 
+.daily-axis-foot {
+    margin-top: 8px;
+    margin-left: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
 .daily-axis-x {
-    margin: 8px 0 0 62px;
+    margin: 0;
     color: #9ab0cf;
     font-size: 12px;
 }
 
 .daily-bar-legend {
-    margin-top: 10px;
+    margin-top: 0;
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
+    justify-content: flex-end;
     color: #afc0d8;
     font-size: 12px;
 }
@@ -1406,6 +1474,18 @@ body[data-theme="dark"] .icon-moon {
     text-decoration: underline;
 }
 
+@media (max-width: 1600px) {
+    .article-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1280px) {
+    .article-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 900px) {
     .sidebar {
         position: static;
@@ -1470,11 +1550,15 @@ body[data-theme="dark"] .icon-moon {
         height: 210px;
     }
 
-    .daily-axis-x {
+    .daily-axis-foot {
         margin-left: 48px;
     }
 
     .day-article-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .article-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -1487,5 +1571,19 @@ body[data-theme="dark"] .icon-moon {
     .day-article-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-}
 
+    .article-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .daily-axis-foot {
+        margin-left: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .daily-bar-legend {
+        justify-content: flex-start;
+    }
+}

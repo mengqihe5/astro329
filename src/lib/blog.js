@@ -532,8 +532,8 @@ export function buildDailyGameChart(monthKey, monthGames) {
 export function mergeGameFreeChartRows(chartRows) {
   const merged = [];
   let i = 0;
-  const colWidth = 32;
-  const colGap = 10;
+  const colWidth = 8;
+  const colGap = 2;
 
   while (i < chartRows.length) {
     const row = chartRows[i];
@@ -550,7 +550,7 @@ export function mergeGameFreeChartRows(chartRows) {
     const span = j - i;
 
     if (span >= 3) {
-      const widthPx = Math.max(72, span * colWidth + (span - 1) * colGap);
+      const widthPx = Math.max(18, span * colWidth + (span - 1) * colGap);
       merged.push({
         kind: "game_free",
         span,
