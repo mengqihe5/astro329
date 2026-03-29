@@ -162,7 +162,7 @@ const data = await buildDashboardData(monthParam, dayParam);
                     <span class="daily-max-cover" title={row.maxGameName || "暂无数据"}>
                       {
                         row.maxCoverUrl ? (
-                          <img src={row.maxCoverUrl} alt={row.maxGameName || "game cover"} />
+                          <img src={row.maxCoverUrl} alt={row.maxGameName || "game cover"} loading="lazy" decoding="async" fetchpriority="low" />
                         ) : (
                           <span class="daily-cover-empty">-</span>
                         )

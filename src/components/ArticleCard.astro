@@ -1,0 +1,22 @@
+﻿---
+const { article } = Astro.props;
+const tags = Array.isArray(article?.tags) && article.tags.length > 0 ? article.tags : ["未分类"];
+---
+<a href={`/articles/${article.slug}/`} class="card card-link article-card">
+  <div class="card-media article-media">
+    <img
+      src={article.cover}
+      alt={`${article.title} 封面`}
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
+    />
+  </div>
+  <div class="card-body">
+    <h3>{article.title}</h3>
+    <p class="meta article-date">{article.date}</p>
+    <p class="meta article-tags">
+      {tags.map((tag) => <span class="article-tag-chip">{tag}</span>)}
+    </p>
+  </div>
+</a>

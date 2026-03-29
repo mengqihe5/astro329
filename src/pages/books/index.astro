@@ -1,6 +1,7 @@
 ﻿---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadBooks, groupByMonth } from "../../lib/blog.js";
+import BookCard from "../../components/BookCard.astro";
 
 const params = Astro.url.searchParams;
 const modeRaw = params.get("mode") || "all";
@@ -53,16 +54,7 @@ if (mode === "tag") {
     mode === "all" ? (
       <section class="card-grid books-grid">
         {books.length > 0 ? (
-          books.map((book) => (
-            <a href={`/books/${book.slug}/`} class="card card-link book-card">
-              <div class="card-media book-media">
-                <img src={book.cover} alt={`${book.title} 封面`} />
-              </div>
-              <div class="card-body">
-                <h3>{book.title}</h3>
-              </div>
-            </a>
-          ))
+          books.map((book) => <BookCard book={book} />)
         ) : (
           <article class="card">
             <p>还没有书籍读后感，请先在 `content/reviews/` 新增 md。</p>
@@ -85,16 +77,7 @@ if (mode === "tag") {
             <section class="timeline-block">
               <h3 class="timeline-title"># {group.tag}</h3>
               <div class="card-grid books-grid">
-                {group.items.map((book) => (
-                  <a href={`/books/${book.slug}/`} class="card card-link book-card">
-                    <div class="card-media book-media">
-                      <img src={book.cover} alt={`${book.title} 封面`} />
-                    </div>
-                    <div class="card-body">
-                      <h3>{book.title}</h3>
-                    </div>
-                  </a>
-                ))}
+                {group.items.map((book) => <BookCard book={book} />)}
               </div>
             </section>
           ))
@@ -111,16 +94,7 @@ if (mode === "tag") {
             <article class="timeline-node">
               <h3 class="timeline-title">{block.monthLabel}</h3>
               <div class="card-grid books-grid">
-                {block.items.map((book) => (
-                  <a href={`/books/${book.slug}/`} class="card card-link book-card">
-                    <div class="card-media book-media">
-                      <img src={book.cover} alt={`${book.title} 封面`} />
-                    </div>
-                    <div class="card-body">
-                      <h3>{book.title}</h3>
-                    </div>
-                  </a>
-                ))}
+                {block.items.map((book) => <BookCard book={book} />)}
               </div>
             </article>
           ))

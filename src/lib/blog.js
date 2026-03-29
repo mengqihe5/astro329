@@ -40,6 +40,8 @@ const FALLBACK_STEAM_GAMES = [
 const DEFAULT_STEAM_ID = "76561199562793160";
 const DEFAULT_STEAM_API_KEY = "";
 export const BLOG_START_MONTH = "2026-03";
+const STEAM_CACHE_TTL_MS = 5 * 60 * 1000;
+const steamOwnedGamesCache = new Map();
 
 const ARTICLE_COVER_BY_SLUG = {
   "django-blog-day-1": "/app01/article-covers/cover-django.svg",
@@ -216,13 +218,14 @@ export function loadBooks(order = "desc") {
     if (slug.toLowerCase() === "readme") continue;
     const { metadata, body } = parseFrontMatter(String(rawText || ""));
     const monthRaw = metadata.month || "未知月份";
+    const parsedTags = parseTags(metadata.tags);
     rows.push({
       slug,
       title: metadata.title || slug.replace(/-/g, " "),
       monthRaw,
       monthLabel: formatMonthLabel(monthRaw),
       cover: findBookCover(slug),
-      tags: parseTags(metadata.tags).length > 0 ? parseTags(metadata.tags) : ["未分类"],
+      tags: parsedTags.length > 0 ? parsedTags : ["未分类"],
       reviewText: body,
     });
   }
@@ -434,6 +437,16 @@ export async function fetchSteamGames(sortBy, monthKey) {
     };
   }
 
+  const nowTs = Date.now();
+  const cacheKey = steamId;
+  const cachedEntry = steamOwnedGamesCache.get(cacheKey);
+  if (cachedEntry && cachedEntry.expiresAt > nowTs && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
+    return {
+      games: withRatio(cachedEntry.cards, sortMode, monthKey),
+      notice: "已加载 Steam 缓存数据。",
+    };
+  }
+
   const endpoint = new URL("https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/");
   endpoint.searchParams.set("key", apiKey);
   endpoint.searchParams.set("steamid", steamId);
@@ -463,11 +476,22 @@ export async function fetchSteamGames(sortBy, monthKey) {
       };
     });
 
+    steamOwnedGamesCache.set(cacheKey, {
+      cards,
+      expiresAt: Date.now() + STEAM_CACHE_TTL_MS,
+    });
+
     return {
       games: withRatio(cards, sortMode, monthKey),
       notice: "已加载 Steam API 实时数据。",
     };
   } catch {
+    if (cachedEntry && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
+      return {
+        games: withRatio(cachedEntry.cards, sortMode, monthKey),
+        notice: "Steam API 调用失败，当前显示最近缓存数据。",
+      };
+    }
     return {
       games: withRatio(FALLBACK_STEAM_GAMES, sortMode, monthKey),
       notice: "Steam API 调用失败，当前显示示例数据。",
@@ -664,7 +688,7 @@ export function renderDayArticlePanel(selectedDayLabel, calendarArticles) {
   const cards = calendarArticles
     .map((article) => {
       const slug = encodeURIComponent(article.slug);
-      return `<a href="/articles/${slug}/" class="card card-link day-article-card"><div class="day-article-thumb"><img src="${escapeHtml(article.cover)}" alt="${escapeHtml(article.title)} cover"></div><div class="day-article-content"><h3>${escapeHtml(article.title)}</h3></div></a>`;
+      return `<a href="/articles/${slug}/" class="card card-link day-article-card"><div class="day-article-thumb"><img src="${escapeHtml(article.cover)}" alt="${escapeHtml(article.title)} cover" loading="lazy" decoding="async" fetchpriority="low"></div><div class="day-article-content"><h3>${escapeHtml(article.title)}</h3></div></a>`;
     })
     .join("");
 

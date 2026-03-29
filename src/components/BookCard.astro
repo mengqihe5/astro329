@@ -1,0 +1,17 @@
+﻿---
+const { book } = Astro.props;
+---
+<a href={`/books/${book.slug}/`} class="card card-link book-card">
+  <div class="card-media book-media">
+    <img
+      src={book.cover}
+      alt={`${book.title} 封面`}
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
+    />
+  </div>
+  <div class="card-body">
+    <h3>{book.title}</h3>
+  </div>
+</a>

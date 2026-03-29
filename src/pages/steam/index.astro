@@ -52,7 +52,13 @@ const games = steamResult.games;
         games.map((game) => (
           <article class="card">
             <div class="card-media game-media">
-              {game.coverUrl ? <img src={game.coverUrl} alt={`${game.name} 封面`} /> : <span>Steam</span>}
+              {
+                game.coverUrl ? (
+                  <img src={game.coverUrl} alt={`${game.name} 封面`} loading="lazy" decoding="async" fetchpriority="low" />
+                ) : (
+                  <span>Steam</span>
+                )
+              }
             </div>
             <div class="card-body">
               <h3>{game.name}</h3>

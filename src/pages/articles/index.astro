@@ -1,6 +1,7 @@
 ﻿---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadArticles, groupByMonth } from "../../lib/blog.js";
+import ArticleCard from "../../components/ArticleCard.astro";
 
 const params = Astro.url.searchParams;
 const mode = params.get("mode") === "tag" ? "tag" : "timeline";
@@ -70,20 +71,7 @@ const timelineGroups = groupByMonth(
             <section class="timeline-block">
               <h3 class="timeline-title"># {group.tag}</h3>
               <div class="card-grid article-grid">
-                {group.articles.map((article) => (
-                  <a href={`/articles/${article.slug}/`} class="card card-link article-card">
-                    <div class="card-media article-media">
-                      <img src={article.cover} alt={`${article.title} 封面`} />
-                    </div>
-                    <div class="card-body">
-                      <h3>{article.title}</h3>
-                      <p class="meta article-date">{article.date}</p>
-                      <p class="meta article-tags">
-                        {article.tags.length > 0 ? article.tags.map((tag) => <span class="article-tag-chip">{tag}</span>) : <span class="article-tag-chip">未分类</span>}
-                      </p>
-                    </div>
-                  </a>
-                ))}
+                {group.articles.map((article) => <ArticleCard article={article} />)}
               </div>
             </section>
           ))
@@ -98,20 +86,7 @@ const timelineGroups = groupByMonth(
         <section class="timeline-block">
           <h3 class="timeline-title">{block.monthLabel}</h3>
           <div class="card-grid article-grid">
-            {block.items.map((article) => (
-              <a href={`/articles/${article.slug}/`} class="card card-link article-card">
-                <div class="card-media article-media">
-                  <img src={article.cover} alt={`${article.title} 封面`} />
-                </div>
-                <div class="card-body">
-                  <h3>{article.title}</h3>
-                  <p class="meta article-date">{article.date}</p>
-                  <p class="meta article-tags">
-                    {article.tags.length > 0 ? article.tags.map((tag) => <span class="article-tag-chip">{tag}</span>) : <span class="article-tag-chip">未分类</span>}
-                  </p>
-                </div>
-              </a>
-            ))}
+            {block.items.map((article) => <ArticleCard article={article} />)}
           </div>
         </section>
       ))
