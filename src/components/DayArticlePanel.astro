@@ -1,0 +1,22 @@
+﻿---
+const { selectedDayLabel, calendarArticles } = Astro.props;
+---
+<h4>{selectedDayLabel}</h4>
+<div class="day-article-grid">
+  {
+    calendarArticles.length > 0 ? (
+      calendarArticles.map((article) => (
+        <a href={`/articles/${article.slug}/`} class="card card-link day-article-card">
+          <div class="day-article-thumb">
+            <img src={article.cover} alt={`${article.title} cover`} />
+          </div>
+          <div class="day-article-content">
+            <h3>{article.title}</h3>
+          </div>
+        </a>
+      ))
+    ) : (
+      <p class="meta">No articles on this date.</p>
+    )
+  }
+</div>

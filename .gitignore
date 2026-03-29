@@ -1,0 +1,11 @@
+﻿node_modules/
+.astro/
+dist/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+
+# Local Netlify folder
+.netlify

@@ -1,0 +1,16 @@
+{
+  "name": "micah-blog-astro",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "new:article": "node scripts/new-article.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.6.1",
+    "@astrojs/netlify": "^6.5.0"
+  }
+}

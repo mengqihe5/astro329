@@ -1,0 +1,124 @@
+﻿---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { loadArticles, groupByMonth } from "../../lib/blog.js";
+
+const params = Astro.url.searchParams;
+const mode = params.get("mode") === "tag" ? "tag" : "timeline";
+const order = params.get("order") === "asc" ? "asc" : "desc";
+
+const articleItems = loadArticles(order);
+const allTags = [...new Set(articleItems.flatMap((article) => article.tags))].sort((a, b) => a.localeCompare(b));
+const selectedTagRaw = params.get("tag") || "all";
+const selectedTag = selectedTagRaw !== "all" && allTags.includes(selectedTagRaw) ? selectedTagRaw : "all";
+
+let tagGroups = [];
+if (mode === "tag") {
+  if (allTags.length === 0) {
+    tagGroups = [{ tag: "未分类", articles: articleItems }];
+  } else if (selectedTag === "all") {
+    tagGroups = allTags.map((tag) => ({ tag, articles: articleItems.filter((article) => article.tags.includes(tag)) }));
+  } else {
+    tagGroups = [{ tag: selectedTag, articles: articleItems.filter((article) => article.tags.includes(selectedTag)) }];
+  }
+}
+
+const timelineGroups = groupByMonth(
+  articleItems.map((article) => ({
+    ...article,
+    monthRaw: article.date.length >= 7 ? article.date.slice(0, 7) : "未知时间",
+  })),
+  "monthRaw"
+);
+---
+<BaseLayout title="文章" currentPath={Astro.url.pathname}>
+  <section class="page-head page-head-row">
+    <div>
+      <h2>文章</h2>
+      <div class="page-note-spacer"></div>
+    </div>
+    <div class="mode-switch-wrap">
+      <div class="mode-switch">
+        <div class:list={["timeline-combo", mode === "timeline" && "active"]}>
+          <a href="/articles/?mode=timeline&order=desc" class="timeline-main">时间轴</a>
+          <details class="timeline-sort">
+            <summary class="timeline-sort-trigger">⇅</summary>
+            <div class="sort-panel">
+              <a href="/articles/?mode=timeline&order=desc" class:list={["sort-item", order === "desc" && "active"]}>降序</a>
+              <a href="/articles/?mode=timeline&order=asc" class:list={["sort-item", order === "asc" && "active"]}>升序</a>
+            </div>
+          </details>
+        </div>
+        <a href={`/articles/?mode=tag&tag=${encodeURIComponent(selectedTag)}`} class:list={["switch-link", mode === "tag" && "active"]}>标签</a>
+      </div>
+    </div>
+  </section>
+
+  {
+    mode === "tag" ? (
+      <>
+        <section class="tag-filter">
+          <a href="/articles/?mode=tag&tag=all" class:list={["chip", selectedTag === "all" && "active"]}>全部</a>
+          {allTags.map((tag) => (
+            <a href={`/articles/?mode=tag&tag=${encodeURIComponent(tag)}`} class:list={["chip", selectedTag === tag && "active"]}>
+              {tag}
+            </a>
+          ))}
+        </section>
+
+        {tagGroups.length > 0 ? (
+          tagGroups.map((group) => (
+            <section class="timeline-block">
+              <h3 class="timeline-title"># {group.tag}</h3>
+              <div class="card-grid">
+                {group.articles.map((article) => (
+                  <a href={`/articles/${article.slug}/`} class="card card-link article-card">
+                    <div class="card-media article-media">
+                      <img src={article.cover} alt={`${article.title} 封面`} />
+                    </div>
+                    <div class="card-body">
+                      <h3>{article.title}</h3>
+                      <p class="meta article-date">{article.date}</p>
+                      <p class="meta article-tags">
+                        {article.tags.length > 0 ? article.tags.map((tag) => <span class="article-tag-chip">{tag}</span>) : <span class="article-tag-chip">未分类</span>}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
+          ))
+        ) : (
+          <article class="card">
+            <p>还没有可显示的文章标签。</p>
+          </article>
+        )}
+      </>
+    ) : timelineGroups.length > 0 ? (
+      timelineGroups.map((block) => (
+        <section class="timeline-block">
+          <h3 class="timeline-title">{block.monthLabel}</h3>
+          <div class="card-grid">
+            {block.items.map((article) => (
+              <a href={`/articles/${article.slug}/`} class="card card-link article-card">
+                <div class="card-media article-media">
+                  <img src={article.cover} alt={`${article.title} 封面`} />
+                </div>
+                <div class="card-body">
+                  <h3>{article.title}</h3>
+                  <p class="meta article-date">{article.date}</p>
+                  <p class="meta article-tags">
+                    {article.tags.length > 0 ? article.tags.map((tag) => <span class="article-tag-chip">{tag}</span>) : <span class="article-tag-chip">未分类</span>}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    ) : (
+      <article class="card">
+        <p>文章目录还没有内容，请先在 `content/articles/` 新增 Markdown 文件。</p>
+      </article>
+    )
+  }
+</BaseLayout>

@@ -342,7 +342,6 @@ def _build_daily_game_chart(month_key, month_games):
                     max_name_by_day[idx] = game.get("name", "")
 
     max_total = max(total_by_day) if total_by_day else 0
-    max_single = max(max_by_day) if max_by_day else 0
     chart_rows = []
     for idx in range(days_in_month):
         total_hours = round(total_by_day[idx], 1)
@@ -353,7 +352,8 @@ def _build_daily_game_chart(month_key, month_games):
                 "total_hours": total_hours,
                 "max_hours": max_hours,
                 "total_height": round((total_hours / max_total) * 100, 2) if max_total > 0 else 0,
-                "max_height": round((max_hours / max_single) * 100, 2) if max_single > 0 else 0,
+                # Use one shared axis so bar heights are visually comparable.
+                "max_height": round((max_hours / max_total) * 100, 2) if max_total > 0 else 0,
                 "max_cover_url": max_cover_by_day[idx],
                 "max_game_name": max_name_by_day[idx],
             }
@@ -364,8 +364,9 @@ def _build_daily_game_chart(month_key, month_games):
 def _merge_game_free_chart_rows(chart_rows):
     merged = []
     i = 0
-    col_width = 64
-    col_gap = 20
+    # Keep merged "Game-free" blocks at about half of previous visual width.
+    col_width = 32
+    col_gap = 10
     total = len(chart_rows)
 
     while i < total:
@@ -381,7 +382,7 @@ def _merge_game_free_chart_rows(chart_rows):
         span = j - i
 
         if span >= 3:
-            width_px = span * col_width + (span - 1) * col_gap
+            width_px = max(72, span * col_width + (span - 1) * col_gap)
             merged.append(
                 {
                     "kind": "game_free",

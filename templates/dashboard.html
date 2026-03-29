@@ -125,11 +125,11 @@
                                 <div class="daily-bar-stack">
                                     <div class="daily-bar-item">
                                         <span class="daily-bar-value">{{ row.max_hours }}</span>
-                                        <span class="daily-bar max" style="height: {{ row.max_height }}%;" title="单日最长游戏 {{ row.max_hours }}h"></span>
+                                        <span class="daily-bar max" style="height: {{ row.max_height }}%;{% if row.max_hours > 0 %} min-height: 2px;{% else %} min-height: 0;{% endif %}" title="单日最长游戏 {{ row.max_hours }}h"></span>
                                     </div>
                                     <div class="daily-bar-item">
                                         <span class="daily-bar-value">{{ row.total_hours }}</span>
-                                        <span class="daily-bar total" style="height: {{ row.total_height }}%;" title="单日总时长 {{ row.total_hours }}h"></span>
+                                        <span class="daily-bar total" style="height: {{ row.total_height }}%;{% if row.total_hours > 0 %} min-height: 2px;{% else %} min-height: 0;{% endif %}" title="单日总时长 {{ row.total_hours }}h"></span>
                                     </div>
                                 </div>
                                 <span class="daily-max-cover" title="{{ row.max_game_name|default:'暂无数据' }}">

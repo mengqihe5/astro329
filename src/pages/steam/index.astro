@@ -1,0 +1,65 @@
+﻿---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { fetchSteamGames, resolveMonth, formatMonthCompact } from "../../lib/blog.js";
+
+const params = Astro.url.searchParams;
+const sortBy = params.get("sort") === "total" ? "total" : "month";
+const selectedMonth = resolveMonth(params.get("month") || "");
+const monthButtonLabel = formatMonthCompact(selectedMonth);
+
+const steamResult = await fetchSteamGames(sortBy, selectedMonth);
+const games = steamResult.games;
+---
+<BaseLayout title="游戏记录（Steam）" currentPath={Astro.url.pathname}>
+  <section class="page-head page-head-row">
+    <div>
+      <h2>游戏记录（Steam）</h2>
+      <div class="page-note-spacer"></div>
+    </div>
+    <div class="steam-control-group">
+      <div class="mode-switch">
+        <details class:list={["month-dropdown", "steam-month-dropdown", sortBy === "month" && "active"]} data-month-dropdown>
+          <summary class:list={["switch-link", "month-switch-trigger", sortBy === "month" && "active"]}>
+            <span class="month-dropdown-label">{monthButtonLabel}</span>
+            <span class="month-dropdown-arrow">▾</span>
+          </summary>
+          <form method="get" class="month-dropdown-panel" data-month-form>
+            <input type="hidden" name="sort" value="month" />
+            <input type="hidden" name="month" value={selectedMonth} data-month-input />
+            <p class="month-wheel-hint">滚轮移动光标，点击时间确认</p>
+            <div class="month-option-list" data-month-list></div>
+          </form>
+        </details>
+        <a href={`/steam/?sort=total&month=${selectedMonth}`} class:list={["switch-link", sortBy === "total" && "active"]}>总时长</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="card-grid steam-grid">
+    {
+      games.length > 0 ? (
+        games.map((game) => (
+          <article class="card">
+            <div class="card-media game-media">
+              {game.coverUrl ? <img src={game.coverUrl} alt={`${game.name} 封面`} /> : <span>Steam</span>}
+            </div>
+            <div class="card-body">
+              <h3>{game.name}</h3>
+              <div class="progress-head meta">
+                <span>本月：{game.monthHours}h</span>
+                <span>总时长：{game.playtimeHours}h</span>
+              </div>
+              <div class="playtime-track">
+                <div class="playtime-fill" style={`width: ${game.ratio}%;`}></div>
+              </div>
+            </div>
+          </article>
+        ))
+      ) : (
+        <article class="card">
+          <p>当前没有可显示的游戏数据。</p>
+        </article>
+      )
+    }
+  </section>
+</BaseLayout>

@@ -1,0 +1,33 @@
+﻿---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { loadArticles } from "../../lib/blog.js";
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const article = loadArticles("desc").find((item) => item.slug === slug);
+if (!article) {
+  Astro.response.status = 404;
+}
+---
+<BaseLayout title={article ? article.title : "文章未找到"} currentPath={Astro.url.pathname}>
+  {
+    article ? (
+      <>
+        <section class="page-head">
+          <a class="text-link" href="/articles/">返回文章列表</a>
+        </section>
+        <article class="card article-full">
+          <h2>{article.title}</h2>
+          <p class="meta">{article.date}</p>
+          <div class="article-content">{article.content}</div>
+        </article>
+      </>
+    ) : (
+      <article class="card article-full">
+        <h2>文章未找到</h2>
+        <p class="meta">该文章不存在或已被移除。</p>
+      </article>
+    )
+  }
+</BaseLayout>

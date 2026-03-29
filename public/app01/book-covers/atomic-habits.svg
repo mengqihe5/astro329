@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 834" role="img" aria-label="Atomic Habits Cover">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#4e342e"/>
+      <stop offset="100%" stop-color="#8d6e63"/>
+    </linearGradient>
+  </defs>
+  <rect width="576" height="834" fill="url(#g)"/>
+  <circle cx="455" cy="180" r="120" fill="rgba(255,255,255,0.16)"/>
+  <text x="56" y="330" fill="#fff3e0" font-size="72" font-family="Georgia, serif">Atomic</text>
+  <text x="56" y="424" fill="#fff3e0" font-size="72" font-family="Georgia, serif">Habits</text>
+</svg>
