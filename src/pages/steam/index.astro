@@ -1,11 +1,14 @@
 ﻿---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { fetchSteamGames, resolveMonth, formatMonthCompact } from "../../lib/blog.js";
+import { fetchSteamGames, resolveMonth, formatMonthCompact, getMonthBounds } from "../../lib/blog.js";
 
 const params = Astro.url.searchParams;
 const sortBy = params.get("sort") === "total" ? "total" : "month";
-const selectedMonth = resolveMonth(params.get("month") || "");
+const { minMonth, maxMonth } = getMonthBounds();
+const selectedMonth = resolveMonth(params.get("month") || "", minMonth, maxMonth);
 const monthButtonLabel = formatMonthCompact(selectedMonth);
+const currentMonth = maxMonth;
+const switchToMonthUrl = `/steam/?sort=month&month=${currentMonth}`;
 
 const steamResult = await fetchSteamGames(sortBy, selectedMonth);
 const games = steamResult.games;
@@ -18,10 +21,18 @@ const games = steamResult.games;
     </div>
     <div class="steam-control-group">
       <div class="mode-switch">
-        <details class:list={["month-dropdown", "steam-month-dropdown", sortBy === "month" && "active"]} data-month-dropdown>
+        <details
+          class:list={["month-dropdown", "steam-month-dropdown", sortBy === "month" && "active"]}
+          data-month-dropdown
+          data-arrow-only="true"
+          data-month-mode={sortBy}
+          data-switch-url={switchToMonthUrl}
+          data-month-min={minMonth}
+          data-month-max={maxMonth}
+        >
           <summary class:list={["switch-link", "month-switch-trigger", sortBy === "month" && "active"]}>
-            <span class="month-dropdown-label">{monthButtonLabel}</span>
-            <span class="month-dropdown-arrow">▾</span>
+            <span class="month-dropdown-label" data-month-label>{monthButtonLabel}</span>
+            <span class="month-dropdown-arrow" data-month-arrow>▾</span>
           </summary>
           <form method="get" class="month-dropdown-panel" data-month-form>
             <input type="hidden" name="sort" value="month" />

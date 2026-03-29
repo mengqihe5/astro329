@@ -87,13 +87,38 @@
 
     // Generic month dropdown: wheel changes focus, click option confirms.
     const monthDropdowns = document.querySelectorAll("[data-month-dropdown]");
-    const buildMonthWindow = function (centerMonth) {
-        const months = [];
-        const span = 180;
-        for (let offset = span; offset >= -span; offset -= 1) {
-            months.push(shiftMonth(centerMonth, offset));
+
+    const monthToIndex = function (value) {
+        if (!/^\d{4}-\d{2}$/.test(String(value || ""))) return null;
+        const bits = value.split("-");
+        const year = Number(bits[0]);
+        const month = Number(bits[1]);
+        if (!year || !month) return null;
+        return year * 12 + (month - 1);
+    };
+
+    const clampMonth = function (value, minMonth, maxMonth) {
+        const current = /^\d{4}-\d{2}$/.test(String(value || "")) ? value : maxMonth;
+        const valueIndex = monthToIndex(current);
+        const minIndex = monthToIndex(minMonth);
+        const maxIndex = monthToIndex(maxMonth);
+        if (valueIndex === null || minIndex === null || maxIndex === null) return maxMonth;
+        if (valueIndex < minIndex) return minMonth;
+        if (valueIndex > maxIndex) return maxMonth;
+        return current;
+    };
+
+    const buildMonthRange = function (minMonth, maxMonth) {
+        const values = [];
+        let cursor = maxMonth;
+        const minIndex = monthToIndex(minMonth);
+        let guard = 0;
+        while (monthToIndex(cursor) !== null && monthToIndex(cursor) >= minIndex && guard < 600) {
+            values.push(cursor);
+            cursor = shiftMonth(cursor, -1);
+            guard += 1;
         }
-        return months;
+        return values;
     };
 
     monthDropdowns.forEach(function (dropdown) {
@@ -102,8 +127,15 @@
         const listNode = dropdown.querySelector("[data-month-list]");
         if (!form || !monthInput || !listNode) return;
 
+        const minMonth = /^\d{4}-\d{2}$/.test(dropdown.dataset.monthMin || "") ? dropdown.dataset.monthMin : "2025-03";
+        const maxMonth = /^\d{4}-\d{2}$/.test(dropdown.dataset.monthMax || "") ? dropdown.dataset.monthMax : currentMonthKey();
+        const boundedMin = monthToIndex(minMonth) !== null && monthToIndex(minMonth) <= monthToIndex(maxMonth) ? minMonth : maxMonth;
+
         const labelNode = dropdown.querySelector(".month-dropdown-label");
         const monthStoreKey = "month_picker_last";
+        const summaryNode = dropdown.querySelector("summary");
+        const labelInSummary = summaryNode ? summaryNode.querySelector("[data-month-label]") : null;
+        const arrowInSummary = summaryNode ? summaryNode.querySelector("[data-month-arrow]") : null;
 
         const syncMonthText = function () {
             if (monthInput.value) {
@@ -116,7 +148,7 @@
         syncMonthText();
 
         const confirmMonth = function (value) {
-            monthInput.value = value;
+            monthInput.value = clampMonth(value, boundedMin, maxMonth);
             syncMonthText();
             if (form.requestSubmit) {
                 form.requestSubmit();
@@ -127,8 +159,9 @@
         };
 
         const renderMonthOptions = function () {
-            const currentMonth = monthInput.value || localStorage.getItem(monthStoreKey) || currentMonthKey();
-            const options = buildMonthWindow(currentMonth);
+            const currentMonth = clampMonth(monthInput.value || localStorage.getItem(monthStoreKey) || maxMonth, boundedMin, maxMonth);
+            monthInput.value = currentMonth;
+            const options = buildMonthRange(boundedMin, maxMonth);
             listNode.innerHTML = "";
             let selectedNode = null;
             options.forEach(function (monthValue) {
@@ -155,6 +188,26 @@
                 });
             }
         };
+
+        if (summaryNode && dropdown.dataset.arrowOnly === "true") {
+            summaryNode.addEventListener("click", function (event) {
+                const target = event.target;
+                const clickedArrow = Boolean(arrowInSummary && (target === arrowInSummary || arrowInSummary.contains(target)));
+                const clickedLabel = Boolean(labelInSummary && (target === labelInSummary || labelInSummary.contains(target)));
+
+                if (clickedLabel) {
+                    event.preventDefault();
+                    if (dropdown.dataset.monthMode !== "month" && dropdown.dataset.switchUrl) {
+                        window.location.href = dropdown.dataset.switchUrl;
+                    }
+                    return;
+                }
+
+                if (!clickedArrow) {
+                    event.preventDefault();
+                }
+            });
+        }
 
         dropdown.addEventListener("toggle", function () {
             if (dropdown.open) {

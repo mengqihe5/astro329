@@ -39,6 +39,7 @@ const FALLBACK_STEAM_GAMES = [
 
 const DEFAULT_STEAM_ID = "76561199562793160";
 const DEFAULT_STEAM_API_KEY = "";
+export const BLOG_START_MONTH = "2026-03";
 
 const ARTICLE_COVER_BY_SLUG = {
   "django-blog-day-1": "/app01/article-covers/cover-django.svg",
@@ -81,6 +82,25 @@ function nowMonth() {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   return year + "-" + month;
+}
+
+function monthKeyToIndex(monthKey) {
+  const match = String(monthKey || "").match(/^(\d{4})-(\d{2})$/);
+  if (!match) return null;
+  return Number(match[1]) * 12 + (Number(match[2]) - 1);
+}
+
+function clampMonthKey(value, minMonth, maxMonth) {
+  if (!/^\d{4}-\d{2}$/.test(String(value || ""))) {
+    return maxMonth;
+  }
+  const valueIndex = monthKeyToIndex(value);
+  const minIndex = monthKeyToIndex(minMonth);
+  const maxIndex = monthKeyToIndex(maxMonth);
+  if (valueIndex === null || minIndex === null || maxIndex === null) return maxMonth;
+  if (valueIndex < minIndex) return minMonth;
+  if (valueIndex > maxIndex) return maxMonth;
+  return value;
 }
 
 function formatLocalDate(dateObj) {
@@ -246,13 +266,22 @@ export function addRatio(rows, valueKey) {
   }));
 }
 
-export function resolveMonth(rawMonth) {
-  if (rawMonth && /^\d{4}-\d{2}$/.test(rawMonth)) return rawMonth;
-  return nowMonth();
+export function getMonthBounds() {
+  const current = nowMonth();
+  const min = monthKeyToIndex(BLOG_START_MONTH) !== null ? BLOG_START_MONTH : current;
+  return monthKeyToIndex(min) <= monthKeyToIndex(current)
+    ? { minMonth: min, maxMonth: current }
+    : { minMonth: current, maxMonth: current };
+}
+
+export function resolveMonth(rawMonth, minMonth, maxMonth) {
+  const bounds = minMonth && maxMonth ? { minMonth, maxMonth } : getMonthBounds();
+  return clampMonthKey(rawMonth, bounds.minMonth, bounds.maxMonth);
 }
 
 export function collectAvailableMonths(articles, books) {
-  const months = new Set([nowMonth()]);
+  const bounds = getMonthBounds();
+  const months = new Set([bounds.maxMonth]);
   for (const article of articles) {
     if (String(article.date).length >= 7) months.add(article.date.slice(0, 7));
   }
@@ -260,6 +289,8 @@ export function collectAvailableMonths(articles, books) {
     if (/^\d{4}-\d{2}$/.test(book.monthRaw)) months.add(book.monthRaw);
   }
   return Array.from(months)
+    .filter((monthKey) => monthKeyToIndex(monthKey) !== null)
+    .map((monthKey) => clampMonthKey(monthKey, bounds.minMonth, bounds.maxMonth))
     .sort((a, b) => b.localeCompare(a))
     .map((value) => ({ value, label: formatMonthLabel(value) }));
 }
@@ -539,9 +570,10 @@ export function mergeGameFreeChartRows(chartRows) {
 }
 
 export async function buildDashboardData(monthParam, dayParam) {
+  const { minMonth, maxMonth } = getMonthBounds();
   const allArticles = loadArticles("desc");
   const allBooks = loadBooks("desc");
-  const selectedMonth = resolveMonth(monthParam);
+  const selectedMonth = resolveMonth(monthParam, minMonth, maxMonth);
   const steamResult = await fetchSteamGames("month", selectedMonth);
 
   const monthArticles = allArticles.filter((item) => item.date.startsWith(selectedMonth));
@@ -587,6 +619,8 @@ export async function buildDashboardData(monthParam, dayParam) {
   );
 
   return {
+    monthMin: minMonth,
+    monthMax: maxMonth,
     monthLabel: formatMonthLabel(selectedMonth),
     monthButtonLabel: formatMonthCompact(selectedMonth),
     selectedMonth,

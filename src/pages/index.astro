@@ -15,7 +15,7 @@ const data = await buildDashboardData(monthParam, dayParam);
         <h2>记录</h2>
         <p class="dash-subtitle">{data.monthLabel} · 写作 / 游戏 / 阅读</p>
       </div>
-      <details class="month-dropdown" data-month-dropdown>
+      <details class="month-dropdown" data-month-dropdown data-month-min={data.monthMin} data-month-max={data.monthMax}>
         <summary class="month-dropdown-trigger">
           <span class="month-dropdown-label">{data.monthButtonLabel}</span>
           <span class="month-dropdown-arrow">▾</span>
