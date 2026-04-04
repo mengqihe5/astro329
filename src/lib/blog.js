@@ -1,5 +1,5 @@
 ﻿import { fileURLToPath } from "node:url";
-import { readFileSync, statSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 
 export const SITE_PROFILE = {
   nickname: "Micah Hale",
@@ -62,19 +62,20 @@ const REVIEW_FILES = import.meta.glob("../../content/reviews/*.md", {
   query: "?raw",
   import: "default",
 });
-const BOOK_COVER_FILES = import.meta.glob("../../app01/static/app01/book-covers/*", {
-  eager: true,
-  import: "default",
-});
 const STEAM_MONTHLY_FILE_URL = new URL("../../content/steam/monthly_hours.json", import.meta.url);
 const STEAM_SNAPSHOTS_FILE_URL = new URL("../../content/steam/monthly_snapshots.json", import.meta.url);
+const PUBLIC_BOOK_COVERS_DIR_URL = new URL("../../public/app01/book-covers/", import.meta.url);
 
-const BOOK_COVER_NAMES = new Set(
-  Object.keys(BOOK_COVER_FILES).map((pathName) => {
-    const match = pathName.match(/([^/\\]+)$/);
-    return match ? match[1] : "";
-  })
-);
+const BOOK_COVER_NAMES = (() => {
+  try {
+    const names = readdirSync(fileURLToPath(PUBLIC_BOOK_COVERS_DIR_URL), { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name);
+    return new Set(names);
+  } catch {
+    return new Set();
+  }
+})();
 
 function nowMonth() {
   const d = new Date();

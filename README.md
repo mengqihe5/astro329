@@ -1,6 +1,6 @@
 ﻿# Micah Blog (Astro)
 
-这个仓库已切换为 **Astro** 版本（保留了原 Django 文件作为历史参考）。
+这个仓库是纯 **Astro** 版本（已移除 Django 代码与模板目录）。
 
 ## 1. 安装与运行
 
@@ -16,12 +16,13 @@ npm run dev
 - 文章：`content/articles/*.md`
 - 读后感：`content/reviews/*.md`
 - Steam 月度补充数据：`content/steam/monthly_hours.json`
+- Steam 月初快照：`content/steam/monthly_snapshots.json`
 - 静态资源：`public/app01/*`
 
 ## 3. 新建文章（带模板）
 
 ```bash
-npm run new:article -- my-new-post --title "我的新文章" --tags "Django,Astro"
+npm run new:article -- my-new-post --title "我的新文章" --tags "日记,读书"
 ```
 
 会生成：`content/articles/my-new-post.md`
