@@ -64,7 +64,7 @@ if (existsSync(filePath) && !args.force) {
 }
 
 const today = new Date().toISOString().slice(0, 10);
-const payload = `title: ${title}\ndate: ${today}\ntags: ${tags}\n\n`;
+const payload = `title: ${title}\ndate: ${today}\ntags: ${tags}\ncover: \ndraft: false\nsummary: \n\n`;
 writeFileSync(filePath, payload, "utf8");
 
 console.log(`Created: content/articles/${slug}.md`);

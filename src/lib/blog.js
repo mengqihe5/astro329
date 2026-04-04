@@ -37,8 +37,6 @@ const FALLBACK_STEAM_GAMES = [
   },
 ];
 
-const DEFAULT_STEAM_ID = "76561199562793160";
-const DEFAULT_STEAM_API_KEY = "";
 export const BLOG_START_MONTH = "2026-03";
 const STEAM_CACHE_TTL_MS = 5 * 60 * 1000;
 const steamOwnedGamesCache = new Map();
@@ -49,6 +47,7 @@ const ARTICLE_COVER_BY_SLUG = {
   "steam-log-method": "/app01/article-covers/cover-steam.svg",
 };
 const DEFAULT_ARTICLE_COVER = "/app01/article-covers/cover-default.svg";
+const ARTICLE_REQUIRED_KEYS = ["title", "date", "tags", "cover", "draft", "summary"];
 
 const BOOK_COVER_EXTENSIONS = [".webp", ".png", ".jpg", ".jpeg", ".svg"];
 
@@ -156,6 +155,28 @@ function parseTags(rawTags) {
     .filter(Boolean);
 }
 
+function parseDraft(rawValue) {
+  return /^(1|true|yes|on)$/i.test(String(rawValue || "").trim());
+}
+
+function normalizeArticleDate(rawValue) {
+  const value = String(rawValue || "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "1970-01-01";
+}
+
+function resolveArticleCover(rawCover, slug) {
+  const value = String(rawCover || "").trim();
+  if (value) {
+    if (/^https?:\/\//i.test(value) || value.startsWith("/")) return value;
+    return `/app01/article-covers/${value}`;
+  }
+  return ARTICLE_COVER_BY_SLUG[slug] || DEFAULT_ARTICLE_COVER;
+}
+
+function hasRequiredArticleFrontmatter(metadata) {
+  return ARTICLE_REQUIRED_KEYS.every((key) => Object.prototype.hasOwnProperty.call(metadata, key));
+}
+
 export function formatMonthLabel(rawMonth) {
   const match = String(rawMonth || "").match(/^(\d{4})-(\d{2})$/);
   if (!match) return rawMonth;
@@ -184,29 +205,43 @@ function buildSummary(metadata, body) {
   return compact.length > 90 ? `${compact.slice(0, 90)}...` : compact;
 }
 
-export function loadArticles(order = "desc") {
+export function loadArticles(order = "desc", options = {}) {
+  const includeDraft = Boolean(options.includeDraft);
   const rows = Object.entries(ARTICLE_FILES).map(([pathName, rawText]) => {
     const slug = slugFromPath(pathName);
     const { metadata, body } = parseFrontMatter(String(rawText || ""));
+    const title = String(metadata.title || "").trim() || slug.replace(/-/g, " ");
+    const date = normalizeArticleDate(metadata.date);
+    const tags = parseTags(metadata.tags);
+    const cover = resolveArticleCover(metadata.cover, slug);
+    const draft = parseDraft(metadata.draft);
+
+    if (!hasRequiredArticleFrontmatter(metadata)) {
+      console.warn(`[articles] missing frontmatter keys in ${slug}.md. Expected: ${ARTICLE_REQUIRED_KEYS.join(", ")}`);
+    }
+
     return {
       slug,
-      title: metadata.title || slug.replace(/-/g, " "),
-      date: metadata.date || "1970-01-01",
+      title,
+      date,
       summary: buildSummary(metadata, body),
       content: body,
-      tags: parseTags(metadata.tags),
-      cover: ARTICLE_COVER_BY_SLUG[slug] || DEFAULT_ARTICLE_COVER,
+      tags,
+      cover,
+      draft,
       mtime: getMtime(pathName),
     };
   });
 
+  const visibleRows = includeDraft ? rows : rows.filter((row) => !row.draft);
+
   const reverse = order !== "asc";
-  rows.sort((a, b) => {
+  visibleRows.sort((a, b) => {
     const dateDelta = a.date.localeCompare(b.date);
     if (dateDelta !== 0) return reverse ? -dateDelta : dateDelta;
     return reverse ? b.mtime - a.mtime : a.mtime - b.mtime;
   });
-  return rows;
+  return visibleRows;
 }
 
 export function loadBooks(order = "desc") {
@@ -501,27 +536,32 @@ function isMonthClosedInDaily(days, monthKey) {
   return dates.some((dateKey) => dateKey >= nextMonthFirstDay);
 }
 
-function updateDailyTotalsStore(games) {
+function updateDailyTotalsStore(games, options = {}) {
   const dailyStore = loadSteamDailyTotals();
   const days = typeof dailyStore.days === "object" && dailyStore.days !== null ? dailyStore.days : {};
-  const todayKey = formatLocalDate(new Date());
+  const manualDate = String(options.dateKey || "").trim();
+  const todayKey = /^\d{4}-\d{2}-\d{2}$/.test(manualDate) ? manualDate : formatLocalDate(new Date());
   const todayTotals = buildTotalsMapFromGames(games);
   const previousTotals = normalizeHoursMap(days[todayKey]);
 
+  let changed = false;
   if (!sameHoursMap(previousTotals, todayTotals)) {
     days[todayKey] = todayTotals;
     dailyStore.days = days;
     dailyStore.updatedAt = new Date().toISOString();
     saveSteamDailyTotals(dailyStore);
+    changed = true;
   }
 
   return {
     days,
     updatedAt: dailyStore.updatedAt,
+    changed,
+    dateKey: todayKey,
   };
 }
 
-function syncMonthlyArchiveFromDaily(monthlyHours, dailyDays) {
+function syncMonthlyArchiveFromDaily(monthlyHours, dailyDays, persist = false) {
   const currentMonth = nowMonth();
   const mergedMonthly = typeof monthlyHours === "object" && monthlyHours !== null ? monthlyHours : {};
   const days = typeof dailyDays === "object" && dailyDays !== null ? dailyDays : {};
@@ -544,28 +584,46 @@ function syncMonthlyArchiveFromDaily(monthlyHours, dailyDays) {
     monthlyChanged = true;
   }
 
-  if (monthlyChanged) {
+  if (monthlyChanged && persist) {
     saveSteamMonthlyHours(mergedMonthly);
   }
   return mergedMonthly;
 }
 
-function buildSteamSources(games) {
-  const dailyStore = updateDailyTotalsStore(games);
-  const monthlyHours = syncMonthlyArchiveFromDaily(loadSteamMonthlyHours(), dailyStore.days);
+function loadSteamSources() {
+  const dailyStore = loadSteamDailyTotals();
+  const monthlyHours = syncMonthlyArchiveFromDaily(loadSteamMonthlyHours(), dailyStore.days, false);
   return {
     monthlyHours,
     dailyDays: dailyStore.days,
   };
 }
 
-function attachMonthHours(games, monthKey, sources = null) {
+function buildCurrentMonthLiveTotals(dailyDays, monthKey, currentTotalsMap) {
+  const monthlyTotals = computeMonthTotalsFromDaily(dailyDays, monthKey);
+  const dates = listSnapshotDates(dailyDays);
+  const todayKey = formatLocalDate(new Date());
+  const latestDate = dates
+    .filter((dateKey) => dateKey <= todayKey && dateKey.startsWith(`${monthKey}-`))
+    .pop();
+  if (!latestDate) return monthlyTotals;
+  const latestTotals = normalizeHoursMap(dailyDays[latestDate]);
+  const liveGap = buildMonthDiff(latestTotals, currentTotalsMap);
+  const merged = { ...monthlyTotals };
+  mergeHoursMap(merged, liveGap);
+  return merged;
+}
+
+function attachMonthHours(games, monthKey, sources = null, currentTotalsMap = null) {
   const monthlyPayload = sources && typeof sources.monthlyHours === "object" && sources.monthlyHours !== null ? sources.monthlyHours : loadSteamMonthlyHours();
   const monthBucket = typeof monthlyPayload[monthKey] === "object" && monthlyPayload[monthKey] !== null ? monthlyPayload[monthKey] : {};
   const dailyDays = sources && typeof sources.dailyDays === "object" && sources.dailyDays !== null
     ? sources.dailyDays
     : loadSteamDailyTotals().days;
-  const monthBucketFromDaily = computeMonthTotalsFromDaily(dailyDays, monthKey);
+  const currentMonth = nowMonth();
+  const monthBucketFromDaily = monthKey === currentMonth && currentTotalsMap
+    ? buildCurrentMonthLiveTotals(dailyDays, monthKey, currentTotalsMap)
+    : computeMonthTotalsFromDaily(dailyDays, monthKey);
 
   return games.map((game) => {
     const appKey = String(game.appId || "");
@@ -593,8 +651,8 @@ function attachMonthHours(games, monthKey, sources = null) {
   });
 }
 
-function withRatio(games, sortMode, selectedMonth, sources = null) {
-  const cards = attachMonthHours(games, selectedMonth, sources);
+function withRatio(games, sortMode, selectedMonth, sources = null, currentTotalsMap = null) {
+  const cards = attachMonthHours(games, selectedMonth, sources, currentTotalsMap);
   const totalHoursSum = cards.reduce((sum, item) => sum + Number(item.playtimeHours || 0), 0);
   const monthHoursSum = cards.reduce((sum, item) => sum + Number(item.monthHours || 0), 0);
 
@@ -614,14 +672,46 @@ function withRatio(games, sortMode, selectedMonth, sources = null) {
   return rows;
 }
 
+async function fetchSteamOwnedCards(apiKey, steamId) {
+  const endpoint = new URL("https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/");
+  endpoint.searchParams.set("key", apiKey);
+  endpoint.searchParams.set("steamid", steamId);
+  endpoint.searchParams.set("include_appinfo", "1");
+  endpoint.searchParams.set("include_played_free_games", "1");
+  endpoint.searchParams.set("format", "json");
+
+  const response = await fetch(endpoint, { method: "GET" });
+  if (!response.ok) {
+    throw new Error("steam-response-not-ok");
+  }
+
+  const payload = await response.json();
+  const gameList = payload?.response?.games || [];
+  if (!Array.isArray(gameList) || gameList.length === 0) {
+    return [];
+  }
+
+  return gameList.map((game) => {
+    const appId = game.appid;
+    return {
+      appId,
+      name: game.name || `App ${appId}`,
+      playtimeHours: Math.round(((game.playtime_forever || 0) / 60) * 10) / 10,
+      recentHours: Math.round(((game.playtime_2weeks || 0) / 60) * 10) / 10,
+      coverUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/header.jpg`,
+    };
+  });
+}
+
 export async function fetchSteamGames(sortBy, monthKey) {
   const sortMode = sortBy === "total" ? "total" : "month";
-  const apiKey = String(import.meta.env.STEAM_API_KEY || DEFAULT_STEAM_API_KEY || "").trim();
-  const steamId = String(import.meta.env.STEAM_ID || DEFAULT_STEAM_ID || "").trim();
+  const apiKey = String(import.meta.env.STEAM_API_KEY || "").trim();
+  const steamId = String(import.meta.env.STEAM_ID || "").trim();
+  const archiveSources = loadSteamSources();
 
   if (!apiKey || !steamId) {
     return {
-      games: withRatio(FALLBACK_STEAM_GAMES, sortMode, monthKey),
+      games: withRatio(FALLBACK_STEAM_GAMES, sortMode, monthKey, archiveSources, buildTotalsMapFromGames(FALLBACK_STEAM_GAMES)),
       notice: "当前显示示例数据。配置 STEAM_API_KEY 和 STEAM_ID 后将自动切换为 Steam 实时数据。",
     };
   }
@@ -630,118 +720,174 @@ export async function fetchSteamGames(sortBy, monthKey) {
   const cacheKey = steamId;
   const cachedEntry = steamOwnedGamesCache.get(cacheKey);
   if (cachedEntry && cachedEntry.expiresAt > nowTs && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
-    const archiveSources = buildSteamSources(cachedEntry.cards);
+    const currentTotalsMap = buildTotalsMapFromGames(cachedEntry.cards);
     return {
-      games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources),
+      games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources, currentTotalsMap),
       notice: "已加载 Steam 缓存数据。",
     };
   }
 
-  const endpoint = new URL("https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/");
-  endpoint.searchParams.set("key", apiKey);
-  endpoint.searchParams.set("steamid", steamId);
-  endpoint.searchParams.set("include_appinfo", "1");
-  endpoint.searchParams.set("include_played_free_games", "1");
-  endpoint.searchParams.set("format", "json");
-
   try {
-    const response = await fetch(endpoint, { method: "GET" });
-    if (!response.ok) {
-      throw new Error("steam-response-not-ok");
-    }
-    const payload = await response.json();
-    const gameList = payload?.response?.games || [];
-    if (!Array.isArray(gameList) || gameList.length === 0) {
+    const cards = await fetchSteamOwnedCards(apiKey, steamId);
+    if (!cards.length) {
       return { games: [], notice: "未从 Steam API 获取到游戏数据。" };
     }
-
-    const cards = gameList.map((game) => {
-      const appId = game.appid;
-      return {
-        appId,
-        name: game.name || `App ${appId}`,
-        playtimeHours: Math.round(((game.playtime_forever || 0) / 60) * 10) / 10,
-        recentHours: Math.round(((game.playtime_2weeks || 0) / 60) * 10) / 10,
-        coverUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/header.jpg`,
-      };
-    });
 
     steamOwnedGamesCache.set(cacheKey, {
       cards,
       expiresAt: Date.now() + STEAM_CACHE_TTL_MS,
     });
-
-    const archiveSources = buildSteamSources(cards);
+    const currentTotalsMap = buildTotalsMapFromGames(cards);
 
     return {
-      games: withRatio(cards, sortMode, monthKey, archiveSources),
+      games: withRatio(cards, sortMode, monthKey, archiveSources, currentTotalsMap),
       notice: "已加载 Steam API 实时数据。",
     };
   } catch {
     if (cachedEntry && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
-      const archiveSources = buildSteamSources(cachedEntry.cards);
+      const currentTotalsMap = buildTotalsMapFromGames(cachedEntry.cards);
       return {
-        games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources),
+        games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources, currentTotalsMap),
         notice: "Steam API 调用失败，当前显示最近缓存数据。",
       };
     }
     return {
-      games: withRatio(FALLBACK_STEAM_GAMES, sortMode, monthKey),
+      games: withRatio(FALLBACK_STEAM_GAMES, sortMode, monthKey, archiveSources, buildTotalsMapFromGames(FALLBACK_STEAM_GAMES)),
       notice: "Steam API 调用失败，当前显示示例数据。",
     };
   }
 }
 
-export function buildDailyGameChart(monthKey, monthGames) {
+export async function syncSteamSnapshots(options = {}) {
+  const apiKey = String(options.apiKey || import.meta.env.STEAM_API_KEY || "").trim();
+  const steamId = String(options.steamId || import.meta.env.STEAM_ID || "").trim();
+  const dateKey = String(options.dateKey || "").trim();
+
+  if (!apiKey || !steamId) {
+    throw new Error("STEAM_API_KEY and STEAM_ID are required");
+  }
+
+  const cards = await fetchSteamOwnedCards(apiKey, steamId);
+  if (!cards.length) {
+    return {
+      ok: false,
+      reason: "empty-games",
+      updatedDaily: false,
+      updatedMonthly: false,
+      games: 0,
+      dateKey: "",
+      archivedMonths: [],
+    };
+  }
+
+  const monthlyBefore = loadSteamMonthlyHours();
+  const monthlyBeforeSnapshot = JSON.stringify(monthlyBefore);
+  const monthlyBeforeKeys = Object.keys(monthlyBefore);
+  const dailyStore = updateDailyTotalsStore(cards, { dateKey });
+  const monthlyAfter = syncMonthlyArchiveFromDaily(monthlyBefore, dailyStore.days, false);
+  const updatedMonthly = monthlyBeforeSnapshot !== JSON.stringify(monthlyAfter);
+
+  if (updatedMonthly) {
+    saveSteamMonthlyHours(monthlyAfter);
+  }
+
+  const archivedMonths = Object.keys(monthlyAfter).filter((monthKey) => !monthlyBeforeKeys.includes(monthKey));
+
+  return {
+    ok: true,
+    updatedDaily: dailyStore.changed,
+    updatedMonthly,
+    games: cards.length,
+    dateKey: dailyStore.dateKey,
+    archivedMonths,
+  };
+}
+
+function buildDailyDiffByDate(days, monthKey) {
+  const dates = listSnapshotDates(days);
+  const dailyDiff = {};
+  for (let i = 1; i < dates.length; i += 1) {
+    const currentDate = dates[i];
+    if (!currentDate.startsWith(`${monthKey}-`)) continue;
+    const prevDate = dates[i - 1];
+    dailyDiff[currentDate] = buildMonthDiff(days[prevDate], days[currentDate]);
+  }
+  return dailyDiff;
+}
+
+function buildLiveGapForToday(days, monthKey, currentTotalsMap) {
+  if (monthKey !== nowMonth()) return null;
+  if (!currentTotalsMap || typeof currentTotalsMap !== "object") return null;
+  const dates = listSnapshotDates(days);
+  const todayKey = formatLocalDate(new Date());
+  const latestDate = dates
+    .filter((dateKey) => dateKey <= todayKey && dateKey.startsWith(`${monthKey}-`))
+    .pop();
+  if (!latestDate) return null;
+  const latestTotals = normalizeHoursMap(days[latestDate]);
+  const gap = buildMonthDiff(latestTotals, currentTotalsMap);
+  if (!Object.keys(gap).length) return null;
+  return {
+    dateKey: todayKey.startsWith(`${monthKey}-`) ? todayKey : latestDate,
+    diffMap: gap,
+  };
+}
+
+export function buildDailyGameChart(monthKey, allGames, dailyDays = null) {
   const [year, month] = monthKey.split("-").map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
   const isCurrentMonth = monthKey === nowMonth();
   const currentDay = Math.max(1, new Date().getDate());
-  const daysToRender = isCurrentMonth ? Math.min(daysInMonth, currentDay) : daysInMonth;
-  const totalByDay = Array.from({ length: daysInMonth }, () => 0);
-  const maxByDay = Array.from({ length: daysInMonth }, () => 0);
-  const maxCoverByDay = Array.from({ length: daysInMonth }, () => "");
-  const maxNameByDay = Array.from({ length: daysInMonth }, () => "");
+  const chartLength = isCurrentMonth ? Math.min(daysInMonth, currentDay) : daysInMonth;
+  const days = dailyDays && typeof dailyDays === "object" ? dailyDays : loadSteamDailyTotals().days;
+  const gameList = Array.isArray(allGames) ? allGames : [];
+  const currentTotalsMap = buildTotalsMapFromGames(gameList);
+  const gameMetaByAppId = new Map(
+    gameList.map((item) => [String(item.appId || ""), { name: item.name || "", coverUrl: item.coverUrl || "" }])
+  );
 
-  if (monthGames.length > 0) {
-    const activeDays = Array.from({ length: daysToRender }, (_, i) => i);
+  const dayDiffByDate = buildDailyDiffByDate(days, monthKey);
+  const liveGap = buildLiveGapForToday(days, monthKey, currentTotalsMap);
+  if (liveGap) {
+    const merged = { ...normalizeHoursMap(dayDiffByDate[liveGap.dateKey]) };
+    mergeHoursMap(merged, liveGap.diffMap);
+    dayDiffByDate[liveGap.dateKey] = merged;
+  }
 
-    monthGames.forEach((game, gameIndex) => {
-      const monthlyHours = Number(game.monthHours || 0);
-      if (monthlyHours <= 0) return;
+  const rows = [];
+  for (let day = 1; day <= chartLength; day += 1) {
+    const dateKey = `${monthKey}-${String(day).padStart(2, "0")}`;
+    const diffMap = normalizeHoursMap(dayDiffByDate[dateKey]);
+    let totalHours = 0;
+    let maxHours = 0;
+    let maxAppId = "";
 
-      const weights = activeDays.map((dayIndex) => {
-        const wave = ((gameIndex + 3) * (dayIndex + 5)) % 7;
-        return 1 + wave / 7;
-      });
-      const weightSum = weights.reduce((sum, value) => sum + value, 0);
-      if (weightSum <= 0) return;
+    for (const [appId, value] of Object.entries(diffMap)) {
+      const hours = Number(value || 0);
+      if (hours <= 0) continue;
+      totalHours += hours;
+      if (hours > maxHours) {
+        maxHours = hours;
+        maxAppId = appId;
+      }
+    }
 
-      activeDays.forEach((dayIndex, i) => {
-        const value = monthlyHours * (weights[i] / weightSum);
-        totalByDay[dayIndex] += value;
-        if (value > maxByDay[dayIndex]) {
-          maxByDay[dayIndex] = value;
-          maxCoverByDay[dayIndex] = game.coverUrl || "";
-          maxNameByDay[dayIndex] = game.name || "";
-        }
-      });
+    const meta = gameMetaByAppId.get(maxAppId) || { name: "", coverUrl: "" };
+    rows.push({
+      day,
+      totalHours: Math.round(totalHours * 10) / 10,
+      maxHours: Math.round(maxHours * 10) / 10,
+      maxCoverUrl: meta.coverUrl || "",
+      maxGameName: meta.name || "",
     });
   }
 
-  const maxTotal = Math.max(0, ...totalByDay);
-  const chartLength = isCurrentMonth ? daysToRender : daysInMonth;
-  return totalByDay.slice(0, chartLength).map((totalValue, idx) => {
-    const totalHours = Math.round(totalValue * 10) / 10;
-    const maxHours = Math.round(maxByDay[idx] * 10) / 10;
+  const maxTotal = Math.max(0, ...rows.map((row) => Number(row.totalHours || 0)));
+  return rows.map((row) => {
     return {
-      day: idx + 1,
-      totalHours,
-      maxHours,
-      totalHeight: maxTotal > 0 ? Math.round(((totalHours / maxTotal) * 100) * 100) / 100 : 0,
-      maxHeight: maxTotal > 0 ? Math.round(((maxHours / maxTotal) * 100) * 100) / 100 : 0,
-      maxCoverUrl: maxCoverByDay[idx],
-      maxGameName: maxNameByDay[idx],
+      ...row,
+      totalHeight: maxTotal > 0 ? Math.round(((row.totalHours / maxTotal) * 100) * 100) / 100 : 0,
+      maxHeight: maxTotal > 0 ? Math.round(((row.maxHours / maxTotal) * 100) * 100) / 100 : 0,
     };
   });
 }
@@ -791,6 +937,7 @@ export async function buildDashboardData(monthParam, dayParam) {
   const allArticles = loadArticles("desc");
   const allBooks = loadBooks("desc");
   const selectedMonth = resolveMonth(monthParam, minMonth, maxMonth);
+  const steamSources = loadSteamSources();
   const steamResult = await fetchSteamGames("month", selectedMonth);
 
   const monthArticles = allArticles.filter((item) => item.date.startsWith(selectedMonth));
@@ -805,7 +952,7 @@ export async function buildDashboardData(monthParam, dayParam) {
   const calendarWeeks = buildArticleCalendar(selectedMonth, monthArticles);
   const calendarArticles = selectedDay ? monthArticles.filter((item) => item.date === selectedDay) : monthArticles;
 
-  const dailyGameChart = buildDailyGameChart(selectedMonth, monthGames);
+  const dailyGameChart = buildDailyGameChart(selectedMonth, steamResult.games, steamSources.dailyDays);
   const dailyGameChartDisplay = mergeGameFreeChartRows(dailyGameChart);
 
   const axisMaxValue = Math.max(0, ...dailyGameChart.map((row) => Number(row.totalHours || 0)));

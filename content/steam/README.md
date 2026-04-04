@@ -22,7 +22,7 @@
 
 说明：
 - 页面选择某年月后，优先读取 `monthly_hours.json` 的该月数据（已归档月份）。
-- 每次访问 Steam 页面会把“当天总时长快照”写入 `daily_totals.json`。
-- 本月统计会基于 `daily_totals.json` 按天差值实时累计，因此本月数据可变。
-- 过去月份在满足归档条件后会自动写入 `monthly_hours.json`，归档后不再修改。
+- 快照由脚本 `npm run steam:snapshot` 写入 `daily_totals.json`（建议每天执行一次，或用 GitHub Actions 定时）。
+- 本月统计基于 `daily_totals.json` 的“日差值”计算；当天会按最新 API 总时长补齐到今日。
+- 过去月份在满足归档条件后写入 `monthly_hours.json`，归档后不再修改。
 - 如果你手工维护 `monthly_hours.json`，页面会优先使用你填的值。

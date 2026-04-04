@@ -1,6 +1,8 @@
-﻿title: 我的 Steam 游戏记录习惯
+title: 我的 Steam 游戏记录习惯
 date: 2026-03-18
 tags: Steam, 游戏记录
+cover: 
+draft: false
 summary: 记录游戏并不是为了打卡，而是为了知道自己为什么在玩、是否还喜欢。
 
 我给每个游戏只写三项信息：总时长、最近两周时长、当前状态。

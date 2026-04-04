@@ -1,113 +1,134 @@
-﻿---
+---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { loadArticles, groupByMonth } from "../../lib/blog.js";
-import ArticleCard from "../../components/ArticleCard.astro";
+import { loadArticles } from "../../lib/blog.js";
 
 const params = Astro.url.searchParams;
-const modeParam = params.get("mode") || "";
-const mode = modeParam === "timeline" || modeParam === "tag" || modeParam === "all" ? modeParam : "all";
-const order = params.get("order") === "asc" ? "asc" : "desc";
+const queryRaw = (params.get("q") || "").trim();
+const queryLower = queryRaw.toLowerCase();
 
-const articleItems = loadArticles(order);
-const allTags = [...new Set(articleItems.flatMap((article) => article.tags))].sort((a, b) => a.localeCompare(b));
-const selectedTagRaw = params.get("tag") || "all";
-const selectedTag = selectedTagRaw !== "all" && allTags.includes(selectedTagRaw) ? selectedTagRaw : "all";
+const allArticles = loadArticles("desc");
+const allTags = [...new Set(allArticles.flatMap((article) => article.tags || []))].sort((a, b) => a.localeCompare(b));
+const allYears = [...new Set(allArticles.map((article) => String(article.date).slice(0, 4)).filter((year) => /^\d{4}$/.test(year)))]
+  .sort((a, b) => Number(b) - Number(a));
 
-let tagGroups = [];
-if (mode === "tag") {
-  if (allTags.length === 0) {
-    tagGroups = [{ tag: "未分类", articles: articleItems }];
-  } else if (selectedTag === "all") {
-    tagGroups = allTags.map((tag) => ({ tag, articles: articleItems.filter((article) => article.tags.includes(tag)) }));
-  } else {
-    tagGroups = [{ tag: selectedTag, articles: articleItems.filter((article) => article.tags.includes(selectedTag)) }];
-  }
+const yearRaw = params.get("year") || "all";
+const selectedYear = yearRaw !== "all" && allYears.includes(yearRaw) ? yearRaw : "all";
+
+const tagRaw = params.get("tag") || "all";
+const selectedTag = tagRaw !== "all" && allTags.includes(tagRaw) ? tagRaw : "all";
+
+const yearCounts = allYears.map((year) => ({
+  year,
+  count: allArticles.filter((article) => String(article.date).startsWith(`${year}-`)).length,
+}));
+
+const tagCounts = allTags.map((tag) => ({
+  tag,
+  count: allArticles.filter((article) => (article.tags || []).includes(tag)).length,
+}));
+
+const filteredArticles = allArticles.filter((article) => {
+  const yearMatch = selectedYear === "all" || String(article.date).startsWith(`${selectedYear}-`);
+  const tagMatch = selectedTag === "all" || (article.tags || []).includes(selectedTag);
+  const searchText = `${article.title} ${(article.tags || []).join(" ")} ${article.content || ""}`.toLowerCase();
+  const queryMatch = !queryLower || searchText.includes(queryLower);
+  return yearMatch && tagMatch && queryMatch;
+});
+
+function toArticlesUrl(next) {
+  const nextParams = new URLSearchParams();
+  const qValue = typeof next.q === "string" ? next.q : queryRaw;
+  const yearValue = typeof next.year === "string" ? next.year : selectedYear;
+  const tagValue = typeof next.tag === "string" ? next.tag : selectedTag;
+
+  if (qValue) nextParams.set("q", qValue);
+  if (yearValue && yearValue !== "all") nextParams.set("year", yearValue);
+  if (tagValue && tagValue !== "all") nextParams.set("tag", tagValue);
+
+  const query = nextParams.toString();
+  return query ? `/articles/?${query}` : "/articles/";
 }
-
-const timelineGroups = groupByMonth(
-  articleItems.map((article) => ({
-    ...article,
-    monthRaw: article.date.length >= 7 ? article.date.slice(0, 7) : "未知时间",
-  })),
-  "monthRaw"
-);
 ---
 <BaseLayout title="文章" currentPath={Astro.url.pathname}>
-  <section class="page-head page-head-row">
-    <div>
-      <h2>文章</h2>
-      <div class="page-note-spacer"></div>
-    </div>
-    <div class="mode-switch-wrap">
-      <div class="mode-switch">
-        <a href="/articles/?mode=all" class:list={["switch-link", mode === "all" && "active"]}>全部</a>
-        <div class:list={["timeline-combo", mode === "timeline" && "active"]}>
-          <a href="/articles/?mode=timeline&order=desc" class="timeline-main">时间轴</a>
-          <details class="timeline-sort">
-            <summary class="timeline-sort-trigger">⇅</summary>
-            <div class="sort-panel">
-              <a href="/articles/?mode=timeline&order=desc" class:list={["sort-item", order === "desc" && "active"]}>降序</a>
-              <a href="/articles/?mode=timeline&order=asc" class:list={["sort-item", order === "asc" && "active"]}>升序</a>
-            </div>
-          </details>
-        </div>
-        <a href={`/articles/?mode=tag&tag=${encodeURIComponent(selectedTag)}`} class:list={["switch-link", mode === "tag" && "active"]}>标签</a>
-      </div>
-    </div>
-  </section>
+  <section class="articles-layout">
+    <div class="articles-main">
+      <section class="page-head article-page-head">
+        <h2>文章</h2>
+        <p class="meta article-head-meta">共 {filteredArticles.length} 篇</p>
+      </section>
 
-  {
-    mode === "all" ? (
-      articleItems.length > 0 ? (
-        <section class="timeline-block">
-          <div class="card-grid article-grid">
-            {articleItems.map((article) => <ArticleCard article={article} />)}
+      {
+        filteredArticles.length > 0 ? (
+          <div class="article-strip-list">
+            {filteredArticles.map((article) => (
+              <a href={`/articles/${article.slug}/`} class="card card-link article-strip-card">
+                <div class="article-strip-content">
+                  <h3>{article.title}</h3>
+                  <div class="article-strip-meta">
+                    <span class="article-strip-date">{article.date}</span>
+                  </div>
+                  <p class="meta article-strip-tags">
+                    {(article.tags && article.tags.length > 0 ? article.tags : ["未分类"]).map((tag) => (
+                      <span class="article-tag-chip">{tag}</span>
+                    ))}
+                  </p>
+                </div>
+              </a>
+            ))}
           </div>
-        </section>
-      ) : (
-        <article class="card">
-          <p>文章目录还没有内容，请先在 `content/articles/` 新增 Markdown 文件。</p>
-        </article>
-      )
-    ) : mode === "tag" ? (
-      <>
-        <section class="tag-filter">
-          <a href="/articles/?mode=tag&tag=all" class:list={["chip", selectedTag === "all" && "active"]}>全部</a>
-          {allTags.map((tag) => (
-            <a href={`/articles/?mode=tag&tag=${encodeURIComponent(tag)}`} class:list={["chip", selectedTag === tag && "active"]}>
-              {tag}
-            </a>
-          ))}
-        </section>
-
-        {tagGroups.length > 0 ? (
-          tagGroups.map((group) => (
-            <section class="timeline-block">
-              <h3 class="timeline-title"># {group.tag}</h3>
-              <div class="card-grid article-grid">
-                {group.articles.map((article) => <ArticleCard article={article} />)}
-              </div>
-            </section>
-          ))
         ) : (
-          <article class="card">
-            <p>还没有可显示的文章标签。</p>
+          <article class="card article-empty-card">
+            <p>当前筛选条件下没有文章，试试清空搜索或切换归档/标签。</p>
           </article>
-        )}
-      </>
-    ) : timelineGroups.length > 0 ? (
-      timelineGroups.map((block) => (
-        <section class="timeline-block">
-          <h3 class="timeline-title">{block.monthLabel}</h3>
-          <div class="card-grid article-grid">
-            {block.items.map((article) => <ArticleCard article={article} />)}
+        )
+      }
+    </div>
+
+    <details class="articles-side-drawer" open>
+      <summary class="articles-side-toggle">筛选与归档</summary>
+      <aside class="articles-side">
+        <section class="card article-side-block">
+          <h3 class="article-side-title">搜索</h3>
+          <form class="article-search-form" method="get" action="/articles/">
+            {selectedYear !== "all" && <input type="hidden" name="year" value={selectedYear} />}
+            {selectedTag !== "all" && <input type="hidden" name="tag" value={selectedTag} />}
+            <div class="article-search-row">
+              <input type="text" name="q" value={queryRaw} placeholder="输入关键词..." />
+              <button type="submit" aria-label="搜索">⌕</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card article-side-block">
+          <h3 class="article-side-title">∞ 时间归档</h3>
+          <div class="article-side-list">
+            <a href={toArticlesUrl({ year: "all" })} class:list={["article-side-item", selectedYear === "all" && "active"]}>
+              <span>全部</span>
+              <span>{allArticles.length}</span>
+            </a>
+            {yearCounts.map((item) => (
+              <a href={toArticlesUrl({ year: item.year })} class:list={["article-side-item", selectedYear === item.year && "active"]}>
+                <span>{item.year}</span>
+                <span>{item.count}</span>
+              </a>
+            ))}
           </div>
         </section>
-      ))
-    ) : (
-      <article class="card">
-        <p>文章目录还没有内容，请先在 `content/articles/` 新增 Markdown 文件。</p>
-      </article>
-    )
-  }
+
+        <section class="card article-side-block">
+          <h3 class="article-side-title"><span class="article-side-hash">#</span> 标签归档</h3>
+          <div class="article-side-tags">
+            <a href={toArticlesUrl({ tag: "all" })} class:list={["chip", selectedTag === "all" && "active"]}>
+              全部
+            </a>
+            {tagCounts.map((item) => (
+              <a href={toArticlesUrl({ tag: item.tag })} class:list={["chip", selectedTag === item.tag && "active"]}>
+                {item.tag} ({item.count})
+              </a>
+            ))}
+          </div>
+        </section>
+      </aside>
+    </details>
+  </section>
 </BaseLayout>

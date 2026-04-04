@@ -1,6 +1,8 @@
-﻿title: 用 Django 开博客的第一天
+title: 用 Django 开博客的第一天
 date: 2026-03-28
 tags: Django, 建站, 笔记
+cover: 
+draft: false
 summary: 从页面结构开始，把左侧固定导航、文章页和内容块先搭起来。
 
 今天把博客骨架先做出来了。先不急着上数据库，把结构跑通最重要。
