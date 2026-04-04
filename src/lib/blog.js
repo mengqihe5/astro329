@@ -421,6 +421,20 @@ function estimateCurrentMonthHoursFromRecent(recentHours, monthKey) {
   return Math.round(recent * overlapRatio * 10) / 10;
 }
 
+function estimatePreviousMonthHoursFromRecent(recentHours, monthKey) {
+  const currentMonth = nowMonth();
+  const previousMonth = shiftMonth(currentMonth, -1);
+  if (monthKey !== previousMonth) return 0;
+  const recent = Math.max(0, Number(recentHours || 0));
+  if (!Number.isFinite(recent) || recent <= 0) return 0;
+  const dayInMonth = Math.max(1, new Date().getDate());
+  const currentMonthDaysInRecent = Math.min(dayInMonth, 14);
+  const previousMonthDaysInRecent = Math.max(0, 14 - currentMonthDaysInRecent);
+  if (previousMonthDaysInRecent <= 0) return 0;
+  const overlapRatio = previousMonthDaysInRecent / 14;
+  return Math.round(recent * overlapRatio * 10) / 10;
+}
+
 function buildMonthDiff(startTotals, endTotals) {
   const startMap = typeof startTotals === "object" && startTotals !== null ? startTotals : {};
   const endMap = typeof endTotals === "object" && endTotals !== null ? endTotals : {};
@@ -439,6 +453,7 @@ function buildMonthDiff(startTotals, endTotals) {
 
 function syncSteamMonthArchives(games) {
   const currentMonth = nowMonth();
+  const previousMonth = shiftMonth(currentMonth, -1);
   const snapshots = loadSteamSnapshots();
   const monthlyHours = loadSteamMonthlyHours();
   const monthStartTotals =
@@ -473,6 +488,22 @@ function syncSteamMonthArchives(games) {
     monthlyChanged = true;
   }
 
+  if (!Object.prototype.hasOwnProperty.call(monthlyHours, previousMonth)) {
+    const estimatedPreviousMonth = {};
+    for (const game of games) {
+      const appKey = String(game.appId || "");
+      if (!appKey) continue;
+      const estimated = estimatePreviousMonthHoursFromRecent(game.recentHours, previousMonth);
+      if (estimated > 0) {
+        estimatedPreviousMonth[appKey] = estimated;
+      }
+    }
+    if (Object.keys(estimatedPreviousMonth).length > 0) {
+      monthlyHours[previousMonth] = estimatedPreviousMonth;
+      monthlyChanged = true;
+    }
+  }
+
   if (snapshotsChanged) {
     snapshots.monthStartTotals = monthStartTotals;
     snapshots.updatedAt = new Date().toISOString();
@@ -496,6 +527,7 @@ function attachMonthHours(games, monthKey, sources = null) {
       ? sources.monthStartTotals
       : loadSteamSnapshots().monthStartTotals;
   const currentMonth = nowMonth();
+  const previousMonth = shiftMonth(currentMonth, -1);
   const monthStartBucket = monthKey === currentMonth && typeof monthStartTotals[currentMonth] === "object" && monthStartTotals[currentMonth] !== null
     ? monthStartTotals[currentMonth]
     : null;
@@ -519,6 +551,10 @@ function attachMonthHours(games, monthKey, sources = null) {
 
     if (monthValue === null && monthKey === currentMonth) {
       monthValue = estimateCurrentMonthHoursFromRecent(game.recentHours, monthKey);
+    }
+
+    if (monthValue === null && monthKey === previousMonth) {
+      monthValue = estimatePreviousMonthHoursFromRecent(game.recentHours, monthKey);
     }
 
     if (monthValue === null) {
@@ -569,8 +605,9 @@ export async function fetchSteamGames(sortBy, monthKey) {
   const cacheKey = steamId;
   const cachedEntry = steamOwnedGamesCache.get(cacheKey);
   if (cachedEntry && cachedEntry.expiresAt > nowTs && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
+    const archiveSources = syncSteamMonthArchives(cachedEntry.cards);
     return {
-      games: withRatio(cachedEntry.cards, sortMode, monthKey),
+      games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources),
       notice: "已加载 Steam 缓存数据。",
     };
   }
@@ -617,8 +654,9 @@ export async function fetchSteamGames(sortBy, monthKey) {
     };
   } catch {
     if (cachedEntry && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
+      const archiveSources = syncSteamMonthArchives(cachedEntry.cards);
       return {
-        games: withRatio(cachedEntry.cards, sortMode, monthKey),
+        games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources),
         notice: "Steam API 调用失败，当前显示最近缓存数据。",
       };
     }

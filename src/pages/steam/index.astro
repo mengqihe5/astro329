@@ -63,8 +63,16 @@ const games = steamResult.games;
             <div class="card-body">
               <h3>{game.name}</h3>
               <div class="progress-head meta">
-                <span>本月：{game.monthHours}h</span>
-                <span>总时长：{game.playtimeHours}h</span>
+                <span class="time-pair">
+                  <span class="time-label">本月：</span>
+                  <span class="time-value">{game.monthHours}</span>
+                  <span class="time-unit">h</span>
+                </span>
+                <span class="time-pair">
+                  <span class="time-label">总时长：</span>
+                  <span class="time-value">{game.playtimeHours}</span>
+                  <span class="time-unit">h</span>
+                </span>
               </div>
               <div class="playtime-track">
                 <div class="playtime-fill" style={`width: ${game.ratio}%;`}></div>

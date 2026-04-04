@@ -53,14 +53,14 @@ const data = await buildDashboardData(monthParam, dayParam);
           <span class="kpi-dot yellow">时</span>
           <div>
             <p>总游戏时长</p>
-            <strong><span class="kpi-value" data-count={data.statTotalGameHours}>0</span>h</strong>
+            <strong class="kpi-metric"><span class="kpi-value kpi-hour-value" data-count={data.statTotalGameHours}>0</span><span class="kpi-unit">h</span></strong>
           </div>
         </div>
         <div class="dash-kpi-item">
           <span class="kpi-dot pink">月</span>
           <div>
             <p>当月游戏时长</p>
-            <strong><span class="kpi-value" data-count={data.statMonthGameHours}>0</span>h</strong>
+            <strong class="kpi-metric"><span class="kpi-value kpi-hour-value" data-count={data.statMonthGameHours}>0</span><span class="kpi-unit">h</span></strong>
           </div>
         </div>
       </article>

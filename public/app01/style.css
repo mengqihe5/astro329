@@ -588,6 +588,29 @@ body[data-theme="dark"] .icon-moon {
     margin-top: 8px;
 }
 
+.progress-head .time-pair {
+    display: inline-flex;
+    align-items: baseline;
+    min-width: 112px;
+}
+
+.progress-head .time-label {
+    flex: 0 0 auto;
+}
+
+.progress-head .time-value {
+    display: inline-block;
+    min-width: 4.8ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.progress-head .time-unit {
+    display: inline-block;
+    width: 1ch;
+    text-align: left;
+}
+
 .playtime-track {
     margin-top: 7px;
     height: 9px;
@@ -826,6 +849,26 @@ body[data-theme="dark"] .icon-moon {
     font-size: 30px;
     font-weight: 700;
     color: #f3f7ff;
+}
+
+.kpi-metric {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.kpi-hour-value {
+    min-width: 6ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-unit {
+    display: inline-block;
+    width: 1ch;
+    font-size: 0.72em;
+    line-height: 1;
+    text-align: left;
 }
 
 .kpi-dot {
