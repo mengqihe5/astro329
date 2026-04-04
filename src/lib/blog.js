@@ -380,7 +380,6 @@ function normalizeMonthHours(value) {
 function attachMonthHours(games, monthKey) {
   const monthlyPayload = loadSteamMonthlyHours();
   const monthBucket = typeof monthlyPayload[monthKey] === "object" && monthlyPayload[monthKey] !== null ? monthlyPayload[monthKey] : {};
-  const currentMonth = nowMonth();
 
   return games.map((game) => {
     const appKey = String(game.appId || "");
@@ -394,7 +393,7 @@ function attachMonthHours(games, monthKey) {
     }
 
     if (monthValue === null) {
-      monthValue = monthKey === currentMonth ? Number(game.recentHours || 0) : 0;
+      monthValue = 0;
     }
 
     return {
@@ -508,11 +507,7 @@ export function buildDailyGameChart(monthKey, monthGames) {
   const maxNameByDay = Array.from({ length: daysInMonth }, () => "");
 
   if (monthGames.length > 0) {
-    const currentMonth = nowMonth();
-    let activeDays = monthKey === currentMonth ? Array.from({ length: Math.min(14, daysInMonth) }, (_, i) => daysInMonth - Math.min(14, daysInMonth) + i) : Array.from({ length: daysInMonth }, (_, i) => i);
-    if (activeDays.length === 0) {
-      activeDays = Array.from({ length: daysInMonth }, (_, i) => i);
-    }
+    const activeDays = Array.from({ length: daysInMonth }, (_, i) => i);
 
     monthGames.forEach((game, gameIndex) => {
       const monthlyHours = Number(game.monthHours || 0);
