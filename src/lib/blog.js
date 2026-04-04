@@ -380,6 +380,7 @@ function normalizeMonthHours(value) {
 function attachMonthHours(games, monthKey) {
   const monthlyPayload = loadSteamMonthlyHours();
   const monthBucket = typeof monthlyPayload[monthKey] === "object" && monthlyPayload[monthKey] !== null ? monthlyPayload[monthKey] : {};
+  const currentMonth = nowMonth();
 
   return games.map((game) => {
     const appKey = String(game.appId || "");
@@ -393,7 +394,7 @@ function attachMonthHours(games, monthKey) {
     }
 
     if (monthValue === null) {
-      monthValue = 0;
+      monthValue = monthKey === currentMonth ? Number(game.recentHours || 0) : 0;
     }
 
     return {
