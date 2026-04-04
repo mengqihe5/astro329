@@ -16,7 +16,7 @@ npm run dev
 - 文章：`content/articles/*.md`
 - 读后感：`content/reviews/*.md`
 - Steam 月度补充数据：`content/steam/monthly_hours.json`
-- Steam 月初快照：`content/steam/monthly_snapshots.json`
+- Steam 每日总时长快照：`content/steam/daily_totals.json`
 - 静态资源：`public/app01/*`
 
 ## 3. 新建文章（带模板）

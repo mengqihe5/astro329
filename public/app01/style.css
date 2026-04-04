@@ -14,7 +14,7 @@ body {
     font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
     background:
         linear-gradient(rgba(10, 7, 24, 0.62), rgba(10, 7, 24, 0.62)),
-        url("backgrounds/site-bg.png") center / cover fixed no-repeat;
+        url("backgrounds/云朵-伊蕾娜-窗边.png") center / cover fixed no-repeat;
 }
 
 body[data-theme="light"] {
@@ -33,7 +33,7 @@ body[data-theme="dark"] {
     --link: #ffd074;
     background:
         linear-gradient(rgba(6, 6, 14, 0.74), rgba(6, 6, 14, 0.74)),
-        url("backgrounds/site-bg.png") center / cover fixed no-repeat;
+        url("backgrounds/云朵-伊蕾娜-窗边.png") center / cover fixed no-repeat;
 }
 
 * {
@@ -803,7 +803,7 @@ body[data-theme="dark"] .icon-moon {
 .dash-kpi-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
-    gap: 16px;
+    gap: 40px;
     margin-top: 18px;
 }
 
@@ -837,11 +837,8 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .dash-kpi-item {
-    display: grid;
-    grid-template-columns: 34px minmax(120px, 190px) 34px;
-    justify-content: center;
-    align-items: center;
-    column-gap: 10px;
+    position: relative;
+    min-height: 72px;
     margin-bottom: 10px;
 }
 
@@ -849,12 +846,21 @@ body[data-theme="dark"] .icon-moon {
     margin: 0;
     color: #9fb1ca;
     font-size: 13px;
+    text-align: left;
 }
 
 .dash-kpi-item strong {
     font-size: 30px;
     font-weight: 700;
     color: #f3f7ff;
+}
+
+.dash-kpi-item > div {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    width: 100%;
+    padding: 0 52px;
 }
 
 .dash-kpi-item > div strong:not(.kpi-metric) {
@@ -866,24 +872,30 @@ body[data-theme="dark"] .icon-moon {
     margin: 0 auto;
 }
 
-.dash-kpi-item::after {
-    content: "";
-    width: 34px;
-    height: 1px;
+.dash-kpi-item .kpi-dot {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .kpi-metric {
     display: inline-grid;
-    grid-template-columns: 6.2ch 1ch;
+    grid-template-columns: 1ch 6.8ch 1ch;
     align-items: baseline;
-    column-gap: 0.28ch;
+    column-gap: 0.42ch;
+}
+
+.kpi-metric::before {
+    content: "";
 }
 
 .kpi-hour-value {
     min-width: 0;
-    width: 6.2ch;
-    text-align: right;
+    width: 6.8ch;
+    text-align: center;
     font-variant-numeric: tabular-nums;
+    grid-column: 2;
 }
 
 .kpi-unit {
@@ -892,6 +904,7 @@ body[data-theme="dark"] .icon-moon {
     font-size: 0.72em;
     line-height: 1;
     text-align: left;
+    grid-column: 3;
 }
 
 .kpi-dot {
@@ -914,7 +927,7 @@ body[data-theme="dark"] .icon-moon {
 .kpi-dot.pink { background: #ef709f; }
 
 .dash-analysis {
-    margin-top: 16px;
+    margin-top: 40px;
     background: rgba(16, 24, 43, 0.78);
     border: 1px solid rgba(132, 167, 255, 0.28);
     border-radius: 16px;
@@ -933,7 +946,7 @@ body[data-theme="dark"] .icon-moon {
 
 .dash-analysis-head h3 {
     margin: 0;
-    font-size: 22px;
+    font-size:38px;
     color: #edf3ff;
 }
 
@@ -956,10 +969,10 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .dash-analysis-grid {
-    margin-top: 12px;
+    margin-top: 40px;
     display: grid;
     grid-template-columns: minmax(460px, 1.75fr) minmax(260px, 1fr);
-    gap: 14px;
+    gap: 40px;
 }
 
 .dash-panel {
@@ -1182,7 +1195,7 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .daily-bars-panel {
-    margin-top: 14px;
+    margin-top: 40px;
 }
 
 .daily-chart-shell {
@@ -1211,7 +1224,7 @@ body[data-theme="dark"] .icon-moon {
     align-items: flex-end;
     gap: 20px;
     overflow-x: auto;
-    padding: 8px 0 18px;
+    padding: 8px 10px 18px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.22);
     background-image: linear-gradient(to top, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
     background-size: 100% 33.333%;
@@ -1253,6 +1266,7 @@ body[data-theme="dark"] .icon-moon {
 
 .daily-game-free-merged {
     align-self: stretch;
+    min-width: 72px;
     border-radius: 12px;
     border: 1px dashed rgba(151, 178, 226, 0.38);
     background: rgba(12, 20, 36, 0.48);

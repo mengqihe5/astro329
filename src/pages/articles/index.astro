@@ -4,7 +4,8 @@ import { loadArticles, groupByMonth } from "../../lib/blog.js";
 import ArticleCard from "../../components/ArticleCard.astro";
 
 const params = Astro.url.searchParams;
-const mode = params.get("mode") === "tag" ? "tag" : "timeline";
+const modeParam = params.get("mode") || "";
+const mode = modeParam === "timeline" || modeParam === "tag" || modeParam === "all" ? modeParam : "all";
 const order = params.get("order") === "asc" ? "asc" : "desc";
 
 const articleItems = loadArticles(order);
@@ -39,6 +40,7 @@ const timelineGroups = groupByMonth(
     </div>
     <div class="mode-switch-wrap">
       <div class="mode-switch">
+        <a href="/articles/?mode=all" class:list={["switch-link", mode === "all" && "active"]}>全部</a>
         <div class:list={["timeline-combo", mode === "timeline" && "active"]}>
           <a href="/articles/?mode=timeline&order=desc" class="timeline-main">时间轴</a>
           <details class="timeline-sort">
@@ -55,7 +57,19 @@ const timelineGroups = groupByMonth(
   </section>
 
   {
-    mode === "tag" ? (
+    mode === "all" ? (
+      articleItems.length > 0 ? (
+        <section class="timeline-block">
+          <div class="card-grid article-grid">
+            {articleItems.map((article) => <ArticleCard article={article} />)}
+          </div>
+        </section>
+      ) : (
+        <article class="card">
+          <p>文章目录还没有内容，请先在 `content/articles/` 新增 Markdown 文件。</p>
+        </article>
+      )
+    ) : mode === "tag" ? (
       <>
         <section class="tag-filter">
           <a href="/articles/?mode=tag&tag=all" class:list={["chip", selectedTag === "all" && "active"]}>全部</a>

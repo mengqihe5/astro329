@@ -63,7 +63,7 @@ const REVIEW_FILES = import.meta.glob("../../content/reviews/*.md", {
   import: "default",
 });
 const STEAM_MONTHLY_FILE_URL = new URL("../../content/steam/monthly_hours.json", import.meta.url);
-const STEAM_SNAPSHOTS_FILE_URL = new URL("../../content/steam/monthly_snapshots.json", import.meta.url);
+const STEAM_DAILY_TOTALS_FILE_URL = new URL("../../content/steam/daily_totals.json", import.meta.url);
 const PUBLIC_BOOK_COVERS_DIR_URL = new URL("../../public/app01/book-covers/", import.meta.url);
 
 const BOOK_COVER_NAMES = (() => {
@@ -382,21 +382,21 @@ function loadSteamMonthlyHours() {
   return readJsonFile(STEAM_MONTHLY_FILE_URL, {});
 }
 
-function loadSteamSnapshots() {
-  const payload = readJsonFile(STEAM_SNAPSHOTS_FILE_URL, {});
-  const monthStartTotals = typeof payload.monthStartTotals === "object" && payload.monthStartTotals !== null ? payload.monthStartTotals : {};
-  return {
-    monthStartTotals,
-    updatedAt: typeof payload.updatedAt === "string" ? payload.updatedAt : "",
-  };
-}
-
 function saveSteamMonthlyHours(value) {
   return writeJsonFile(STEAM_MONTHLY_FILE_URL, value);
 }
 
-function saveSteamSnapshots(value) {
-  return writeJsonFile(STEAM_SNAPSHOTS_FILE_URL, value);
+function loadSteamDailyTotals() {
+  const payload = readJsonFile(STEAM_DAILY_TOTALS_FILE_URL, {});
+  const days = typeof payload.days === "object" && payload.days !== null ? payload.days : {};
+  return {
+    days,
+    updatedAt: typeof payload.updatedAt === "string" ? payload.updatedAt : "",
+  };
+}
+
+function saveSteamDailyTotals(value) {
+  return writeJsonFile(STEAM_DAILY_TOTALS_FILE_URL, value);
 }
 
 function shiftMonth(monthKey, step) {
@@ -412,33 +412,33 @@ function normalizeMonthHours(value) {
   return Math.round(Math.max(number, 0) * 10) / 10;
 }
 
-function estimateCurrentMonthHoursFromRecent(recentHours, monthKey) {
-  if (monthKey !== nowMonth()) return 0;
-  const recent = Math.max(0, Number(recentHours || 0));
-  if (!Number.isFinite(recent) || recent <= 0) return 0;
-  const dayInMonth = Math.max(1, new Date().getDate());
-  const overlapRatio = Math.min(dayInMonth, 14) / 14;
-  return Math.round(recent * overlapRatio * 10) / 10;
+function normalizeHoursMap(input) {
+  const map = typeof input === "object" && input !== null ? input : {};
+  const normalized = {};
+  for (const [key, rawValue] of Object.entries(map)) {
+    const value = normalizeMonthHours(rawValue);
+    if (value !== null) {
+      normalized[String(key)] = value;
+    }
+  }
+  return normalized;
 }
 
-function estimatePreviousMonthHoursFromRecent(recentHours, monthKey) {
-  const currentMonth = nowMonth();
-  const previousMonth = shiftMonth(currentMonth, -1);
-  if (monthKey !== previousMonth) return 0;
-  const recent = Math.max(0, Number(recentHours || 0));
-  if (!Number.isFinite(recent) || recent <= 0) return 0;
-  return Math.round(recent * 10) / 10;
+function listSnapshotDates(days) {
+  return Object.keys(days)
+    .filter((dateKey) => /^\d{4}-\d{2}-\d{2}$/.test(dateKey))
+    .sort((a, b) => a.localeCompare(b));
 }
 
 function buildMonthDiff(startTotals, endTotals) {
-  const startMap = typeof startTotals === "object" && startTotals !== null ? startTotals : {};
-  const endMap = typeof endTotals === "object" && endTotals !== null ? endTotals : {};
+  const startMap = normalizeHoursMap(startTotals);
+  const endMap = normalizeHoursMap(endTotals);
   const result = {};
   const keys = new Set([...Object.keys(startMap), ...Object.keys(endMap)]);
   for (const key of keys) {
     const startValue = Number(startMap[key] || 0);
     const endValue = Number(endMap[key] || 0);
-    const diff = Math.round(Math.max(0, endValue - startValue) * 10) / 10;
+    const diff = normalizeMonthHours(Math.max(0, endValue - startValue));
     if (diff > 0) {
       result[key] = diff;
     }
@@ -446,86 +446,126 @@ function buildMonthDiff(startTotals, endTotals) {
   return result;
 }
 
-function syncSteamMonthArchives(games) {
-  const currentMonth = nowMonth();
-  const previousMonth = shiftMonth(currentMonth, -1);
-  const snapshots = loadSteamSnapshots();
-  const monthlyHours = loadSteamMonthlyHours();
-  const monthStartTotals =
-    typeof snapshots.monthStartTotals === "object" && snapshots.monthStartTotals !== null ? snapshots.monthStartTotals : {};
-
-  let snapshotsChanged = false;
-  let monthlyChanged = false;
-
-  if (!monthStartTotals[currentMonth]) {
-    const baseline = {};
-    for (const game of games) {
-      const appKey = String(game.appId || "");
-      if (!appKey) continue;
-      const total = Math.max(0, Number(game.playtimeHours || 0));
-      const estimatedMonth = estimateCurrentMonthHoursFromRecent(game.recentHours, currentMonth);
-      baseline[appKey] = Math.round(Math.max(0, total - estimatedMonth) * 10) / 10;
-    }
-    monthStartTotals[currentMonth] = baseline;
-    snapshotsChanged = true;
-  }
-
-  const snapshotMonths = Object.keys(monthStartTotals)
-    .filter((value) => /^\d{4}-\d{2}$/.test(value))
-    .sort((a, b) => a.localeCompare(b));
-
-  for (let i = 0; i < snapshotMonths.length - 1; i += 1) {
-    const month = snapshotMonths[i];
-    const nextMonth = snapshotMonths[i + 1];
-    if (nextMonth !== shiftMonth(month, 1)) continue;
-    if (Object.prototype.hasOwnProperty.call(monthlyHours, month)) continue;
-    monthlyHours[month] = buildMonthDiff(monthStartTotals[month], monthStartTotals[nextMonth]);
-    monthlyChanged = true;
-  }
-
-  if (!Object.prototype.hasOwnProperty.call(monthlyHours, previousMonth)) {
-    const estimatedPreviousMonth = {};
-    for (const game of games) {
-      const appKey = String(game.appId || "");
-      if (!appKey) continue;
-      const estimated = estimatePreviousMonthHoursFromRecent(game.recentHours, previousMonth);
-      if (estimated > 0) {
-        estimatedPreviousMonth[appKey] = estimated;
-      }
-    }
-    if (Object.keys(estimatedPreviousMonth).length > 0) {
-      monthlyHours[previousMonth] = estimatedPreviousMonth;
-      monthlyChanged = true;
+function mergeHoursMap(target, source) {
+  const targetMap = target;
+  const sourceMap = normalizeHoursMap(source);
+  for (const [key, value] of Object.entries(sourceMap)) {
+    const nextValue = normalizeMonthHours((targetMap[key] || 0) + value);
+    if (nextValue > 0) {
+      targetMap[key] = nextValue;
     }
   }
+}
 
-  if (snapshotsChanged) {
-    snapshots.monthStartTotals = monthStartTotals;
-    snapshots.updatedAt = new Date().toISOString();
-    saveSteamSnapshots(snapshots);
+function sameHoursMap(left, right) {
+  const a = normalizeHoursMap(left);
+  const b = normalizeHoursMap(right);
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) return false;
+  for (const key of aKeys) {
+    if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+    if (a[key] !== b[key]) return false;
   }
-  if (monthlyChanged) {
-    saveSteamMonthlyHours(monthlyHours);
+  return true;
+}
+
+function buildTotalsMapFromGames(games) {
+  const map = {};
+  for (const game of games) {
+    const appKey = String(game.appId || "");
+    if (!appKey) continue;
+    const value = normalizeMonthHours(game.playtimeHours);
+    map[appKey] = value === null ? 0 : value;
+  }
+  return map;
+}
+
+function computeMonthTotalsFromDaily(days, monthKey) {
+  const dates = listSnapshotDates(days);
+  const result = {};
+  for (let i = 1; i < dates.length; i += 1) {
+    const currentDate = dates[i];
+    if (!currentDate.startsWith(monthKey + "-")) continue;
+    const prevDate = dates[i - 1];
+    const diff = buildMonthDiff(days[prevDate], days[currentDate]);
+    mergeHoursMap(result, diff);
+  }
+  return result;
+}
+
+function isMonthClosedInDaily(days, monthKey) {
+  const nextMonth = shiftMonth(monthKey, 1);
+  const nextMonthFirstDay = `${nextMonth}-01`;
+  const dates = listSnapshotDates(days);
+  return dates.some((dateKey) => dateKey >= nextMonthFirstDay);
+}
+
+function updateDailyTotalsStore(games) {
+  const dailyStore = loadSteamDailyTotals();
+  const days = typeof dailyStore.days === "object" && dailyStore.days !== null ? dailyStore.days : {};
+  const todayKey = formatLocalDate(new Date());
+  const todayTotals = buildTotalsMapFromGames(games);
+  const previousTotals = normalizeHoursMap(days[todayKey]);
+
+  if (!sameHoursMap(previousTotals, todayTotals)) {
+    days[todayKey] = todayTotals;
+    dailyStore.days = days;
+    dailyStore.updatedAt = new Date().toISOString();
+    saveSteamDailyTotals(dailyStore);
   }
 
   return {
+    days,
+    updatedAt: dailyStore.updatedAt,
+  };
+}
+
+function syncMonthlyArchiveFromDaily(monthlyHours, dailyDays) {
+  const currentMonth = nowMonth();
+  const mergedMonthly = typeof monthlyHours === "object" && monthlyHours !== null ? monthlyHours : {};
+  const days = typeof dailyDays === "object" && dailyDays !== null ? dailyDays : {};
+  const dateKeys = listSnapshotDates(days);
+  const monthCandidates = new Set();
+  for (const dateKey of dateKeys) {
+    monthCandidates.add(dateKey.slice(0, 7));
+  }
+  let monthlyChanged = false;
+
+  const sortedMonths = Array.from(monthCandidates)
+    .filter((monthKey) => /^\d{4}-\d{2}$/.test(monthKey))
+    .sort((a, b) => a.localeCompare(b));
+
+  for (const monthKey of sortedMonths) {
+    if (monthKey >= currentMonth) continue;
+    if (Object.prototype.hasOwnProperty.call(mergedMonthly, monthKey)) continue;
+    if (!isMonthClosedInDaily(days, monthKey)) continue;
+    mergedMonthly[monthKey] = computeMonthTotalsFromDaily(days, monthKey);
+    monthlyChanged = true;
+  }
+
+  if (monthlyChanged) {
+    saveSteamMonthlyHours(mergedMonthly);
+  }
+  return mergedMonthly;
+}
+
+function buildSteamSources(games) {
+  const dailyStore = updateDailyTotalsStore(games);
+  const monthlyHours = syncMonthlyArchiveFromDaily(loadSteamMonthlyHours(), dailyStore.days);
+  return {
     monthlyHours,
-    monthStartTotals,
+    dailyDays: dailyStore.days,
   };
 }
 
 function attachMonthHours(games, monthKey, sources = null) {
   const monthlyPayload = sources && typeof sources.monthlyHours === "object" && sources.monthlyHours !== null ? sources.monthlyHours : loadSteamMonthlyHours();
   const monthBucket = typeof monthlyPayload[monthKey] === "object" && monthlyPayload[monthKey] !== null ? monthlyPayload[monthKey] : {};
-  const monthStartTotals =
-    sources && typeof sources.monthStartTotals === "object" && sources.monthStartTotals !== null
-      ? sources.monthStartTotals
-      : loadSteamSnapshots().monthStartTotals;
-  const currentMonth = nowMonth();
-  const previousMonth = shiftMonth(currentMonth, -1);
-  const monthStartBucket = monthKey === currentMonth && typeof monthStartTotals[currentMonth] === "object" && monthStartTotals[currentMonth] !== null
-    ? monthStartTotals[currentMonth]
-    : null;
+  const dailyDays = sources && typeof sources.dailyDays === "object" && sources.dailyDays !== null
+    ? sources.dailyDays
+    : loadSteamDailyTotals().days;
+  const monthBucketFromDaily = computeMonthTotalsFromDaily(dailyDays, monthKey);
 
   return games.map((game) => {
     const appKey = String(game.appId || "");
@@ -538,18 +578,8 @@ function attachMonthHours(games, monthKey, sources = null) {
       monthValue = normalizeMonthHours(monthBucket[nameKey]);
     }
 
-    if (monthValue === null && monthStartBucket && Object.prototype.hasOwnProperty.call(monthStartBucket, appKey)) {
-      const startTotal = Number(monthStartBucket[appKey] || 0);
-      const totalHours = Number(game.playtimeHours || 0);
-      monthValue = Math.round(Math.max(0, totalHours - startTotal) * 10) / 10;
-    }
-
-    if (monthValue === null && monthKey === currentMonth) {
-      monthValue = estimateCurrentMonthHoursFromRecent(game.recentHours, monthKey);
-    }
-
-    if (monthValue === null && monthKey === previousMonth) {
-      monthValue = estimatePreviousMonthHoursFromRecent(game.recentHours, monthKey);
+    if (monthValue === null && Object.prototype.hasOwnProperty.call(monthBucketFromDaily, appKey)) {
+      monthValue = normalizeMonthHours(monthBucketFromDaily[appKey]);
     }
 
     if (monthValue === null) {
@@ -600,7 +630,7 @@ export async function fetchSteamGames(sortBy, monthKey) {
   const cacheKey = steamId;
   const cachedEntry = steamOwnedGamesCache.get(cacheKey);
   if (cachedEntry && cachedEntry.expiresAt > nowTs && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
-    const archiveSources = syncSteamMonthArchives(cachedEntry.cards);
+    const archiveSources = buildSteamSources(cachedEntry.cards);
     return {
       games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources),
       notice: "已加载 Steam 缓存数据。",
@@ -641,7 +671,7 @@ export async function fetchSteamGames(sortBy, monthKey) {
       expiresAt: Date.now() + STEAM_CACHE_TTL_MS,
     });
 
-    const archiveSources = syncSteamMonthArchives(cards);
+    const archiveSources = buildSteamSources(cards);
 
     return {
       games: withRatio(cards, sortMode, monthKey, archiveSources),
@@ -649,7 +679,7 @@ export async function fetchSteamGames(sortBy, monthKey) {
     };
   } catch {
     if (cachedEntry && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
-      const archiveSources = syncSteamMonthArchives(cachedEntry.cards);
+      const archiveSources = buildSteamSources(cachedEntry.cards);
       return {
         games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources),
         notice: "Steam API 调用失败，当前显示最近缓存数据。",
@@ -737,7 +767,7 @@ export function mergeGameFreeChartRows(chartRows) {
     const span = j - i;
 
     if (span >= 3) {
-      const widthPx = Math.max(18, span * colWidth + (span - 1) * colGap);
+      const widthPx = Math.max(72, span * colWidth + (span - 1) * colGap);
       merged.push({
         kind: "game_free",
         span,
