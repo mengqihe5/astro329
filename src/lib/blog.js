@@ -750,6 +750,7 @@ export async function buildDashboardData(monthParam, dayParam) {
   const axisMid = axisMax > 0 ? Math.round((axisMax / 2) * 10) / 10 : 0;
 
   const monthGameHours = Math.round(monthGames.reduce((sum, item) => sum + Number(item.monthHours || 0), 0) * 10) / 10;
+  const totalGameHours = Math.round(steamResult.games.reduce((sum, item) => sum + Number(item.playtimeHours || 0), 0) * 10) / 10;
 
   const tagCounter = new Map();
   for (const article of monthArticles) {
@@ -791,6 +792,7 @@ export async function buildDashboardData(monthParam, dayParam) {
     statTotalBooks: allBooks.length,
     statMonthArticles: monthArticles.length,
     statMonthBooks: monthBooks.length,
+    statTotalGameHours: totalGameHours,
     statMonthGameHours: monthGameHours,
     statActiveGames: monthGames.filter((item) => Number(item.monthHours || 0) >= 30).length,
     dailyAxisMax: axisMax,
