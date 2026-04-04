@@ -427,12 +427,7 @@ function estimatePreviousMonthHoursFromRecent(recentHours, monthKey) {
   if (monthKey !== previousMonth) return 0;
   const recent = Math.max(0, Number(recentHours || 0));
   if (!Number.isFinite(recent) || recent <= 0) return 0;
-  const dayInMonth = Math.max(1, new Date().getDate());
-  const currentMonthDaysInRecent = Math.min(dayInMonth, 14);
-  const previousMonthDaysInRecent = Math.max(0, 14 - currentMonthDaysInRecent);
-  if (previousMonthDaysInRecent <= 0) return 0;
-  const overlapRatio = previousMonthDaysInRecent / 14;
-  return Math.round(recent * overlapRatio * 10) / 10;
+  return Math.round(recent * 10) / 10;
 }
 
 function buildMonthDiff(startTotals, endTotals) {

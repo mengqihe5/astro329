@@ -583,15 +583,18 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .progress-head {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
     margin-top: 8px;
 }
 
 .progress-head .time-pair {
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: auto 5.2ch 1ch;
     align-items: baseline;
-    min-width: 112px;
+    column-gap: 0;
+    min-width: 0;
 }
 
 .progress-head .time-label {
@@ -830,12 +833,15 @@ body[data-theme="dark"] .icon-moon {
     margin: 0 0 12px;
     font-size: 19px;
     color: #e6eeff;
+    text-align: center;
 }
 
 .dash-kpi-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: 34px minmax(120px, 190px) 34px;
+    justify-content: center;
     align-items: center;
-    gap: 10px;
+    column-gap: 10px;
     margin-bottom: 10px;
 }
 
@@ -851,14 +857,31 @@ body[data-theme="dark"] .icon-moon {
     color: #f3f7ff;
 }
 
+.dash-kpi-item > div strong:not(.kpi-metric) {
+    display: block;
+    text-align: center;
+}
+
+.dash-kpi-item > div .kpi-metric {
+    margin: 0 auto;
+}
+
+.dash-kpi-item::after {
+    content: "";
+    width: 34px;
+    height: 1px;
+}
+
 .kpi-metric {
-    display: inline-flex;
+    display: inline-grid;
+    grid-template-columns: 6.2ch 1ch;
     align-items: baseline;
-    gap: 2px;
+    column-gap: 0.28ch;
 }
 
 .kpi-hour-value {
-    min-width: 6ch;
+    min-width: 0;
+    width: 6.2ch;
     text-align: right;
     font-variant-numeric: tabular-nums;
 }
