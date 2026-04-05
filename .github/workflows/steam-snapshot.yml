@@ -3,7 +3,7 @@ name: Steam Snapshot
 on:
   workflow_dispatch:
   schedule:
-    - cron: "20 16 * * *"
+    - cron: "*/30 * * * *"
 
 permissions:
   contents: write

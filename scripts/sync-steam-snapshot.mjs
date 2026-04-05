@@ -1,8 +1,9 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const DAILY_FILE = resolve(process.cwd(), "content", "steam", "daily_totals.json");
 const MONTHLY_FILE = resolve(process.cwd(), "content", "steam", "monthly_hours.json");
+const ENV_FILE = resolve(process.cwd(), ".env");
 
 function parseArgs(argv) {
   const result = { date: "" };
@@ -104,6 +105,21 @@ function writeJson(filePath, data) {
   writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
+function loadDotEnvFile(filePath) {
+  if (!existsSync(filePath)) return;
+  const raw = readFileSync(filePath, "utf8");
+  const lines = String(raw || "").split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue;
+    const [key, ...rest] = trimmed.split("=");
+    const name = key.trim();
+    if (!name || Object.prototype.hasOwnProperty.call(process.env, name)) continue;
+    const value = rest.join("=").trim().replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
+    process.env[name] = value;
+  }
+}
+
 async function fetchSteamOwnedGames(apiKey, steamId) {
   const endpoint = new URL("https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/");
   endpoint.searchParams.set("key", apiKey);
@@ -135,6 +151,7 @@ function buildTotalsMapFromGames(games) {
 }
 
 const args = parseArgs(process.argv);
+loadDotEnvFile(ENV_FILE);
 const apiKey = String(process.env.STEAM_API_KEY || "").trim();
 const steamId = String(process.env.STEAM_ID || "").trim();
 
