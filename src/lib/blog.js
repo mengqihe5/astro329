@@ -9,7 +9,7 @@ export const SITE_PROFILE = {
 export const NAV_ITEMS = [
   { title: "首页", href: "/", icon: "home", activePrefixes: ["/"] },
   { title: "文章", href: "/articles/", icon: "article", activePrefixes: ["/articles"] },
-  { title: "游戏记录", href: "/steam/", icon: "gamepad", activePrefixes: ["/steam"] },
+  { title: "游戏", href: "/steam/", icon: "gamepad", activePrefixes: ["/steam"] },
   { title: "书架", href: "/books/", icon: "book", activePrefixes: ["/books"] },
 ];
 
