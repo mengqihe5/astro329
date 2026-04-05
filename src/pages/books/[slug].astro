@@ -35,14 +35,14 @@ const pageDescription = book
         <section class="page-head">
           <a class="text-link" href="/books/">返回书架</a>
         </section>
-        <article class="card article-full" data-pagefind-body>
+        <article class="card article-full article-detail" data-pagefind-body>
           <h2>{book.title}</h2>
           <p class="meta">{book.monthLabel}</p>
-          <pre class="md-view">{book.reviewText}</pre>
+          <div class="article-content">{book.reviewText}</div>
         </article>
       </>
     ) : (
-      <article class="card article-full">
+      <article class="card article-full article-detail">
         <h2>书籍未找到</h2>
         <p class="meta">该书籍不存在或已被移除。</p>
       </article>

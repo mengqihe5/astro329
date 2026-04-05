@@ -2,6 +2,7 @@
     --sidebar-width: 186px;
     --radius: 16px;
     --font-main: "MiSans", "HarmonyOS Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-title: var(--font-main);
 }
 
 body {
@@ -16,6 +17,25 @@ body {
     background:
         linear-gradient(rgba(10, 7, 24, 0.62), rgba(10, 7, 24, 0.62)),
         url("backgrounds/云朵-伊蕾娜-窗边.png") center / cover fixed no-repeat;
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+    font-family: var(--font-main);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-title);
+    font-weight: 700;
 }
 
 body[data-theme="light"] {
@@ -487,6 +507,17 @@ body[data-theme="dark"] .icon-moon {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
+.steam-grid .card {
+    background: linear-gradient(135deg, rgba(17, 28, 55, 0.56), rgba(14, 23, 43, 0.48));
+    border-color: rgba(156, 177, 224, 0.28);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.steam-grid .card:hover {
+    border-color: rgba(255, 208, 116, 0.48);
+    box-shadow: 0 12px 22px rgba(6, 11, 24, 0.34);
+}
+
 .steam-grid .card-body h3 {
     min-height: 2.7em;
     display: -webkit-box;
@@ -675,36 +706,54 @@ body[data-theme="dark"] .icon-moon {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 24px;
 }
 
 .articles-layout {
     margin-top: 12px;
     margin-left: 22px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(0, 1fr) clamp(224px, 19.2vw, 336px);
     gap: 34px;
     align-items: start;
 }
 
 .articles-main {
     min-width: 0;
-    padding-right: 14px;
+    padding-right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.article-page-head,
+.article-strip-list,
+.article-empty-card {
+    width: min(100%, 1260px);
 }
 
 .article-strip-list {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: center;
+    row-gap: 14px;
+    column-gap: 24px;
 }
 
 .article-strip-card {
+    width: 100%;
     min-height: 136px;
     padding: 18px 20px 10px;
     border-radius: 16px;
-    border: 1px solid rgba(156, 177, 224, 0.32);
-    background: linear-gradient(135deg, rgba(17, 28, 55, 0.78), rgba(14, 23, 43, 0.72));
+    border: 1px solid rgba(156, 177, 224, 0.28);
+    background: linear-gradient(135deg, rgba(17, 28, 55, 0.56), rgba(14, 23, 43, 0.48));
     transition: transform 0.18s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.article-strip-content {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .article-strip-card:hover {
@@ -715,8 +764,8 @@ body[data-theme="dark"] .icon-moon {
 
 .article-strip-content h3 {
     margin: 0;
-    font-size: 36px;
-    line-height: 1.1;
+    font-size: 30px;
+    line-height: 1.14;
     color: var(--article-title-color, #ff6b6b);
     text-shadow: 0 0 10px rgba(6, 12, 28, 0.34);
     letter-spacing: 0.2px;
@@ -751,13 +800,21 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .article-strip-meta {
-    margin-top: 24px;
+    margin-top: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 18px;
+    gap: 8px;
     color: #c2d2ee;
-    font-size: 17px;
+    font-size: 15px;
+}
+
+.article-strip-foot {
+    margin-top: auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 .article-strip-date {
@@ -774,10 +831,13 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .article-strip-tags {
-    margin-top: 10px;
+    margin-top: 0;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    justify-content: flex-end;
+    align-content: flex-end;
+    flex: 1 1 auto;
 }
 
 .article-empty-card {
@@ -800,19 +860,28 @@ body[data-theme="dark"] .icon-moon {
 .articles-side {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
     position: fixed;
     top: 124px;
     right: 24px;
-    width: 324px;
+    width: clamp(224px, 19.2vw, 336px);
     align-self: start;
 }
 
 .article-side-block {
-    padding: 14px 16px;
+    padding: 16px 18px;
     border-radius: 14px;
-    background: transparent;
-    backdrop-filter: none;
+    border: 1px solid rgba(130, 154, 206, 0.34);
+    background: linear-gradient(145deg, rgba(12, 22, 44, 0.6), rgba(8, 16, 31, 0.46));
+    box-shadow: 0 10px 20px rgba(4, 10, 22, 0.24);
+    backdrop-filter: blur(6px);
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.article-side-block:hover {
+    border-color: rgba(255, 208, 116, 0.46);
+    box-shadow: 0 14px 24px rgba(4, 10, 22, 0.3);
+    transform: translateY(-1px);
 }
 
 .article-side-title {
@@ -841,6 +910,10 @@ body[data-theme="dark"] .icon-moon {
     margin: 0;
 }
 
+.article-side-search .article-side-title {
+    margin-bottom: 20px;
+}
+
 .article-search-row {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -864,8 +937,21 @@ body[data-theme="dark"] .icon-moon {
     border-radius: 10px;
     background: rgba(245, 248, 255, 0.72);
     color: #54688f;
-    font-size: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+}
+
+.search-btn-icon {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+.article-search-row input:focus {
+    border-color: rgba(255, 208, 116, 0.56);
+    box-shadow: 0 0 0 2px rgba(255, 208, 116, 0.2);
 }
 
 .article-side-list {
@@ -895,7 +981,11 @@ body[data-theme="dark"] .icon-moon {
 .article-side-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 9px;
+}
+
+.article-side-tags-block .article-side-title {
+    margin-bottom: 20px;
 }
 
 .article-side-tags .chip {
@@ -908,17 +998,6 @@ body[data-theme="dark"] .icon-moon {
     background: rgba(24, 39, 73, 0.78);
     color: #ffe3a8;
     border-color: rgba(255, 208, 116, 0.58);
-}
-
-.article-fulltext-link {
-    display: inline-flex;
-    margin-top: 10px;
-    font-size: 14px;
-    color: #b7ccf5;
-}
-
-.article-fulltext-link:hover {
-    color: #ffe3a8;
 }
 
 .pagefind-shell {
@@ -1834,6 +1913,31 @@ body[data-theme="dark"] .icon-moon {
     padding: 18px 20px;
 }
 
+.article-detail {
+    width: min(100%, 1240px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.article-full h2 {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.14;
+}
+
+.article-detail h2,
+.article-detail .meta {
+    text-align: center;
+}
+
+.article-detail .meta {
+    margin-top: 14px;
+}
+
+.article-detail .article-content {
+    margin-top: 24px;
+}
+
 .article-content {
     margin-top: 10px;
     white-space: pre-wrap;
@@ -1844,7 +1948,7 @@ body[data-theme="dark"] .icon-moon {
     margin: 10px 0 0;
     white-space: pre-wrap;
     line-height: 1.6;
-    font-family: "Consolas", "Courier New", monospace;
+    font-family: var(--font-main);
     color: #e7eeff;
 }
 
@@ -1870,17 +1974,21 @@ body[data-theme="dark"] .icon-moon {
     }
 
     .articles-layout {
-        grid-template-columns: minmax(0, 1fr) 320px;
-        gap: 16px;
+        grid-template-columns: minmax(0, 1fr) clamp(200px, 24vw, 272px);
+        gap: 14px;
         margin-left: 12px;
     }
 
     .articles-side {
-        width: 288px;
+        width: clamp(200px, 24vw, 272px);
     }
 
     .article-strip-content h3 {
-        font-size: 32px;
+        font-size: 27px;
+    }
+
+    .article-full h2 {
+        font-size: 27px;
     }
 }
 
@@ -1966,6 +2074,16 @@ body[data-theme="dark"] .icon-moon {
         margin-left: 0;
     }
 
+    .articles-main {
+        align-items: stretch;
+    }
+
+    .article-page-head,
+    .article-strip-list,
+    .article-empty-card {
+        width: 100%;
+    }
+
     .articles-side-drawer {
         order: -1;
     }
@@ -1997,8 +2115,21 @@ body[data-theme="dark"] .icon-moon {
         width: auto;
     }
 
+    .article-strip-list {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+    }
+
     .article-strip-content h3 {
-        font-size: 28px;
+        font-size: 24px;
+    }
+
+    .article-full h2 {
+        font-size: 24px;
+    }
+
+    .article-detail {
+        width: 100%;
     }
 }
 
@@ -2022,7 +2153,11 @@ body[data-theme="dark"] .icon-moon {
     }
 
     .article-strip-content h3 {
-        font-size: 25px;
+        font-size: 22px;
+    }
+
+    .article-full h2 {
+        font-size: 22px;
     }
 
     .article-strip-meta {

@@ -34,7 +34,6 @@ const filteredArticles = allArticles.filter((article) => {
   const queryMatch = !queryLower || searchText.includes(queryLower);
   return yearMatch && tagMatch && queryMatch;
 });
-const fulltextUrl = queryRaw ? `/search/?q=${encodeURIComponent(queryRaw)}` : "/search/";
 
 function toArticlesUrl(next) {
   const nextParams = new URLSearchParams();
@@ -69,14 +68,16 @@ function toArticlesUrl(next) {
               <a href={`/articles/${article.slug}/`} class="card card-link article-strip-card">
                 <div class="article-strip-content">
                   <h3>{article.title}</h3>
-                  <div class="article-strip-meta">
-                    <span class="article-strip-date">{article.date}</span>
+                  <div class="article-strip-foot">
+                    <div class="article-strip-meta">
+                      <span class="article-strip-date">{article.date}</span>
+                    </div>
+                    <p class="meta article-strip-tags">
+                      {(article.tags && article.tags.length > 0 ? article.tags : ["未分类"]).map((tag) => (
+                        <span class="article-tag-chip">{tag}</span>
+                      ))}
+                    </p>
                   </div>
-                  <p class="meta article-strip-tags">
-                    {(article.tags && article.tags.length > 0 ? article.tags : ["未分类"]).map((tag) => (
-                      <span class="article-tag-chip">{tag}</span>
-                    ))}
-                  </p>
                 </div>
               </a>
             ))}
@@ -92,17 +93,20 @@ function toArticlesUrl(next) {
     <details class="articles-side-drawer" open>
       <summary class="articles-side-toggle">筛选与归档</summary>
       <aside class="articles-side">
-        <section class="card article-side-block">
+        <section class="card article-side-block article-side-search">
           <h3 class="article-side-title">搜索</h3>
           <form class="article-search-form" method="get" action="/articles/">
             {selectedYear !== "all" && <input type="hidden" name="year" value={selectedYear} />}
             {selectedTag !== "all" && <input type="hidden" name="tag" value={selectedTag} />}
             <div class="article-search-row">
               <input type="text" name="q" value={queryRaw} placeholder="输入关键词..." />
-              <button type="submit" aria-label="搜索">搜</button>
+              <button type="submit" aria-label="搜索">
+                <svg class="search-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M10.5 3a7.5 7.5 0 1 1 4.7 13.35l4.22 4.23-1.42 1.41-4.23-4.22A7.5 7.5 0 0 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z"></path>
+                </svg>
+              </button>
             </div>
           </form>
-          <a class="text-link article-fulltext-link" href={fulltextUrl}>全文搜索</a>
         </section>
 
         <section class="card article-side-block">
@@ -121,7 +125,7 @@ function toArticlesUrl(next) {
           </div>
         </section>
 
-        <section class="card article-side-block">
+        <section class="card article-side-block article-side-tags-block">
           <h3 class="article-side-title"><span class="article-side-hash">#</span> 标签归档</h3>
           <div class="article-side-tags">
             <a href={toArticlesUrl({ tag: "all" })} class:list={["chip", selectedTag === "all" && "active"]}>

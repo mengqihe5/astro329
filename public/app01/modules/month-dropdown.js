@@ -2,6 +2,22 @@
 
 const monthRangeCache = new Map();
 
+function safeStorageGet(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage failures (private mode / blocked storage).
+  }
+}
+
 export function initMonthDropdowns() {
   const monthDropdowns = document.querySelectorAll("[data-month-dropdown]");
 
@@ -19,14 +35,13 @@ export function initMonthDropdowns() {
     const labelNode = dropdown.querySelector(".month-dropdown-label");
     const monthStoreKey = dropdown.dataset.monthStoreKey || ("month_picker_last_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_"));
     const summaryNode = dropdown.querySelector("summary");
-    const labelInSummary = summaryNode ? summaryNode.querySelector("[data-month-label]") : null;
     const arrowInSummary = summaryNode ? summaryNode.querySelector("[data-month-arrow]") : null;
 
     const syncMonthText = function () {
       const clampedValue = clampMonth(monthInput.value, boundedMin, maxMonth);
       monthInput.value = clampedValue;
       if (clampedValue) {
-        localStorage.setItem(monthStoreKey, clampedValue);
+        safeStorageSet(monthStoreKey, clampedValue);
       }
       if (labelNode) {
         labelNode.textContent = formatMonthZh(clampedValue);
@@ -46,13 +61,14 @@ export function initMonthDropdowns() {
     };
 
     const renderMonthOptions = function () {
-      const currentMonth = clampMonth(monthInput.value || localStorage.getItem(monthStoreKey) || maxMonth, boundedMin, maxMonth);
+      const currentMonth = clampMonth(monthInput.value || safeStorageGet(monthStoreKey) || maxMonth, boundedMin, maxMonth);
       monthInput.value = currentMonth;
 
       if (!monthRangeCache.has(monthRangeKey)) {
         monthRangeCache.set(monthRangeKey, buildMonthRange(boundedMin, maxMonth));
       }
-      const monthOptions = monthRangeCache.get(monthRangeKey) || [];
+      const rawMonthOptions = monthRangeCache.get(monthRangeKey) || [];
+      const monthOptions = rawMonthOptions.length > 0 ? rawMonthOptions : [currentMonth];
 
       listNode.innerHTML = "";
       let selectedNode = null;
@@ -69,7 +85,7 @@ export function initMonthDropdowns() {
           selectedNode = button;
         }
         button.addEventListener("click", function () {
-          localStorage.setItem(monthStoreKey, monthValue);
+          safeStorageSet(monthStoreKey, monthValue);
           confirmMonth(monthValue);
         });
         fragment.appendChild(button);
@@ -88,18 +104,12 @@ export function initMonthDropdowns() {
       summaryNode.addEventListener("click", function (event) {
         const target = event.target;
         const clickedArrow = Boolean(arrowInSummary && (target === arrowInSummary || arrowInSummary.contains(target)));
-        const clickedLabel = Boolean(labelInSummary && (target === labelInSummary || labelInSummary.contains(target)));
 
-        if (clickedLabel) {
+        if (!clickedArrow) {
           event.preventDefault();
           if (dropdown.dataset.monthMode !== "month" && dropdown.dataset.switchUrl) {
             window.location.href = dropdown.dataset.switchUrl;
           }
-          return;
-        }
-
-        if (!clickedArrow) {
-          event.preventDefault();
         }
       });
     }

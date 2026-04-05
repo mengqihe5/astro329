@@ -8,6 +8,7 @@
     "build": "npm run content:check && astro build && npm run search:index",
     "preview": "astro preview",
     "new:article": "node scripts/new-article.mjs",
+    "books:covers": "node scripts/fetch-book-covers.mjs",
     "content:check": "node scripts/validate-articles.mjs",
     "content:fix": "node scripts/validate-articles.mjs --fix",
     "steam:snapshot": "node scripts/sync-steam-snapshot.mjs",

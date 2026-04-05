@@ -189,14 +189,63 @@ export function formatMonthCompact(rawMonth) {
   return `${Number(match[1])}年${Number(match[2])}月`;
 }
 
-function findBookCover(slug) {
+function escapeSvgText(input) {
+  return String(input || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function hashText(input) {
+  let hash = 0;
+  for (const char of String(input || "")) {
+    hash = (hash * 33 + char.codePointAt(0)) % 3600;
+  }
+  return hash;
+}
+
+function buildAutoBookCover(slug, title, monthRaw) {
+  const seed = hashText(`${slug}|${title}|${monthRaw}`);
+  const hueA = seed % 360;
+  const hueB = (hueA + 38) % 360;
+  const hueC = (hueA + 92) % 360;
+  const badgeText = escapeSvgText(Array.from(String(title || slug || "书")).slice(0, 2).join(""));
+  const monthText = escapeSvgText(formatMonthLabel(monthRaw || "未知月份"));
+
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 834">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(${hueA} 65% 45%)"/>
+      <stop offset="55%" stop-color="hsl(${hueB} 62% 35%)"/>
+      <stop offset="100%" stop-color="hsl(${hueC} 58% 28%)"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <rect width="576" height="834" fill="url(#bg)"/>
+  <circle cx="484" cy="112" r="168" fill="url(#shine)" opacity="0.45"/>
+  <rect x="48" y="610" width="480" height="162" rx="22" fill="rgba(7,13,28,0.54)" stroke="rgba(255,255,255,0.24)"/>
+  <text x="72" y="694" font-size="36" fill="rgba(236,244,255,0.92)" font-family="Arial, sans-serif">${monthText}</text>
+  <rect x="58" y="58" width="142" height="142" rx="24" fill="rgba(7,13,28,0.42)" stroke="rgba(255,255,255,0.28)"/>
+  <text x="129" y="146" text-anchor="middle" font-size="66" font-weight="700" fill="rgba(248,252,255,0.96)" font-family="Arial, sans-serif">${badgeText}</text>
+</svg>`.trim();
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function findBookCover(slug, title, monthRaw) {
   for (const ext of BOOK_COVER_EXTENSIONS) {
     const fileName = `${slug}${ext}`;
     if (BOOK_COVER_NAMES.has(fileName)) {
       return `/app01/book-covers/${fileName}`;
     }
   }
-  return "/app01/book-covers/default-book.svg";
+  return buildAutoBookCover(slug, title, monthRaw);
 }
 
 function buildSummary(metadata, body) {
@@ -251,13 +300,14 @@ export function loadBooks(order = "desc") {
     if (slug.toLowerCase() === "readme") continue;
     const { metadata, body } = parseFrontMatter(String(rawText || ""));
     const monthRaw = metadata.month || "未知月份";
+    const bookTitle = metadata.title || slug.replace(/-/g, " ");
     const parsedTags = parseTags(metadata.tags);
     rows.push({
       slug,
-      title: metadata.title || slug.replace(/-/g, " "),
+      title: bookTitle,
       monthRaw,
       monthLabel: formatMonthLabel(monthRaw),
-      cover: findBookCover(slug),
+      cover: findBookCover(slug, bookTitle, monthRaw),
       tags: parsedTags.length > 0 ? parsedTags : ["未分类"],
       reviewText: body,
     });

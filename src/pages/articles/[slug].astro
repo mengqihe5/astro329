@@ -33,14 +33,14 @@ const pageDescription = article ? article.summary : "该文章不存在或已被
         <section class="page-head">
           <a class="text-link" href="/articles/">返回文章列表</a>
         </section>
-        <article class="card article-full" data-pagefind-body>
+        <article class="card article-full article-detail" data-pagefind-body>
           <h2>{article.title}</h2>
           <p class="meta">{article.date}</p>
           <div class="article-content">{article.content}</div>
         </article>
       </>
     ) : (
-      <article class="card article-full">
+      <article class="card article-full article-detail">
         <h2>文章未找到</h2>
         <p class="meta">该文章不存在或已被移除。</p>
       </article>
