@@ -1,15 +1,46 @@
-ï»¿---
+---
+import { ViewTransitions } from "astro:transitions";
 import { SITE_PROFILE, getNavItems } from "../lib/blog.js";
 
-const { title = "æˆ‘çš„åšå®¢", currentPath = "/" } = Astro.props;
+const {
+  title = "Micah Hale | ¼ÇÂ¼²©¿Í",
+  description = "Micah Hale µÄĞ´×÷¡¢ÓÎÏ·ÓëÔÄ¶Á¼ÇÂ¼¡£",
+  currentPath = "/",
+  ogImage = "/app01/avatar.jpg",
+  ogType = "website",
+  noindex = false,
+} = Astro.props;
+
 const navItems = getNavItems(currentPath);
+const baseUrl =
+  Astro.site ||
+  (import.meta.env.PUBLIC_SITE_URL ? new URL(import.meta.env.PUBLIC_SITE_URL) : null) ||
+  new URL(Astro.url.origin);
+const canonicalUrl = new URL(`${Astro.url.pathname}${Astro.url.search}`, baseUrl).toString();
+const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() : "";
 ---
 <!DOCTYPE html>
 <html lang="zh-Hans">
   <head>
+    <ViewTransitions />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? "noindex,nofollow" : "index,follow"} />
+    <meta name="theme-color" content="#0d1735" />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content={`${SITE_PROFILE.nickname} µÄ²©¿Í`} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    {resolvedOgImage && <meta property="og:image" content={resolvedOgImage} />}
+    <meta name="twitter:card" content={resolvedOgImage ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
     <link rel="stylesheet" href="/app01/style.css" />
   </head>
   <body data-theme="light">
@@ -55,7 +86,7 @@ const navItems = getNavItems(currentPath);
           </nav>
         </div>
         <div class="sidebar-bottom">
-          <button id="themeToggle" class="icon-button" type="button" aria-label="åˆ‡æ¢å¤–è§‚">
+          <button id="themeToggle" class="icon-button" type="button" aria-label="ÇĞ»»Íâ¹Û">
             <svg class="icon icon-sun">
               <use href="#icon-sun"></use>
             </svg>
@@ -74,4 +105,3 @@ const navItems = getNavItems(currentPath);
     <script is:inline type="module" src="/app01/app.js"></script>
   </body>
 </html>
-

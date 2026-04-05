@@ -13,7 +13,11 @@ const switchToMonthUrl = `/steam/?sort=month&month=${currentMonth}`;
 const steamResult = await fetchSteamGames(sortBy, selectedMonth);
 const games = steamResult.games;
 ---
-<BaseLayout title="游戏记录（Steam）" currentPath={Astro.url.pathname}>
+<BaseLayout
+  title="游戏 | Steam 记录"
+  description={`${monthButtonLabel} 的 Steam 游戏时长与总时长统计。`}
+  currentPath={Astro.url.pathname}
+>
   <section class="page-head page-head-row">
     <div>
       <h2>游戏记录（Steam）</h2>

@@ -2,22 +2,38 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadArticles } from "../../lib/blog.js";
 
-export const prerender = false;
+export const prerender = true;
+
+export function getStaticPaths() {
+  return loadArticles("desc").map((item) => ({
+    params: { slug: item.slug },
+    props: { article: item },
+  }));
+}
 
 const { slug } = Astro.params;
-const article = loadArticles("desc").find((item) => item.slug === slug);
+const article = Astro.props.article || loadArticles("desc").find((item) => item.slug === slug);
 if (!article) {
   Astro.response.status = 404;
 }
+const pageTitle = article ? `${article.title} | 文章` : "文章未找到";
+const pageDescription = article ? article.summary : "该文章不存在或已被移除。";
 ---
-<BaseLayout title={article ? article.title : "文章未找到"} currentPath={Astro.url.pathname}>
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  ogImage={article?.cover || "/app01/article-covers/cover-default.svg"}
+  ogType={article ? "article" : "website"}
+  noindex={!article}
+  currentPath={Astro.url.pathname}
+>
   {
     article ? (
       <>
         <section class="page-head">
           <a class="text-link" href="/articles/">返回文章列表</a>
         </section>
-        <article class="card article-full">
+        <article class="card article-full" data-pagefind-body>
           <h2>{article.title}</h2>
           <p class="meta">{article.date}</p>
           <div class="article-content">{article.content}</div>

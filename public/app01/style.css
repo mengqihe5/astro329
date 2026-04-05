@@ -1,6 +1,7 @@
 ﻿:root {
     --sidebar-width: 186px;
     --radius: 16px;
+    --font-main: "MiSans", "HarmonyOS Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 body {
@@ -11,7 +12,7 @@ body {
     --link: #ffd074;
     margin: 0;
     color: var(--text-main);
-    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-family: var(--font-main);
     background:
         linear-gradient(rgba(10, 7, 24, 0.62), rgba(10, 7, 24, 0.62)),
         url("backgrounds/云朵-伊蕾娜-窗边.png") center / cover fixed no-repeat;
@@ -716,8 +717,37 @@ body[data-theme="dark"] .icon-moon {
     margin: 0;
     font-size: 36px;
     line-height: 1.1;
-    color: #eef4ff;
+    color: var(--article-title-color, #ff6b6b);
+    text-shadow: 0 0 10px rgba(6, 12, 28, 0.34);
     letter-spacing: 0.2px;
+}
+
+.article-strip-list .article-strip-card:nth-child(7n + 1) {
+    --article-title-color: #ff5f6d;
+}
+
+.article-strip-list .article-strip-card:nth-child(7n + 2) {
+    --article-title-color: #ff9f43;
+}
+
+.article-strip-list .article-strip-card:nth-child(7n + 3) {
+    --article-title-color: #ffd166;
+}
+
+.article-strip-list .article-strip-card:nth-child(7n + 4) {
+    --article-title-color: #7bd389;
+}
+
+.article-strip-list .article-strip-card:nth-child(7n + 5) {
+    --article-title-color: #63d5ff;
+}
+
+.article-strip-list .article-strip-card:nth-child(7n + 6) {
+    --article-title-color: #7da8ff;
+}
+
+.article-strip-list .article-strip-card:nth-child(7n + 7) {
+    --article-title-color: #c996ff;
 }
 
 .article-strip-meta {
@@ -821,7 +851,7 @@ body[data-theme="dark"] .icon-moon {
     width: 100%;
     border: 1px solid rgba(172, 191, 228, 0.36);
     border-radius: 10px;
-    background: rgba(245, 248, 255, 0.92);
+    background: rgba(245, 248, 255, 0.72);
     padding: 10px 12px;
     color: #1c2437;
     font-size: 17px;
@@ -832,7 +862,7 @@ body[data-theme="dark"] .icon-moon {
     width: 42px;
     border: 1px solid rgba(172, 191, 228, 0.36);
     border-radius: 10px;
-    background: rgba(245, 248, 255, 0.92);
+    background: rgba(245, 248, 255, 0.72);
     color: #54688f;
     font-size: 24px;
     cursor: pointer;
@@ -869,15 +899,65 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .article-side-tags .chip {
-    background: rgba(246, 250, 255, 0.92);
-    color: #34405d;
-    border-color: rgba(152, 173, 216, 0.28);
+    background: rgba(10, 18, 36, 0.62);
+    color: #dfe9ff;
+    border-color: rgba(130, 154, 206, 0.42);
 }
 
 .article-side-tags .chip.active {
-    background: rgba(255, 208, 116, 0.36);
-    color: #fff3d7;
-    border-color: rgba(255, 208, 116, 0.64);
+    background: rgba(24, 39, 73, 0.78);
+    color: #ffe3a8;
+    border-color: rgba(255, 208, 116, 0.58);
+}
+
+.article-fulltext-link {
+    display: inline-flex;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #b7ccf5;
+}
+
+.article-fulltext-link:hover {
+    color: #ffe3a8;
+}
+
+.pagefind-shell {
+    margin-top: 12px;
+    padding: 16px 18px 18px;
+}
+
+.pagefind-hint {
+    margin: 10px 2px 0;
+}
+
+.pagefind-search .pagefind-ui__search-input {
+    border: 1px solid rgba(172, 191, 228, 0.36);
+    border-radius: 12px;
+    background: rgba(245, 248, 255, 0.72);
+    color: #1c2437;
+}
+
+.pagefind-search .pagefind-ui__drawer {
+    margin-top: 12px;
+}
+
+.pagefind-search .pagefind-ui__result {
+    border-radius: 12px;
+    border: 1px solid rgba(104, 136, 204, 0.45);
+    background: rgba(9, 20, 48, 0.58);
+    padding: 10px 12px;
+}
+
+.pagefind-search .pagefind-ui__result-link {
+    color: #e9f0ff;
+}
+
+.pagefind-search .pagefind-ui__result-link:hover {
+    color: #ffd58c;
+}
+
+.pagefind-search .pagefind-ui__result-excerpt {
+    color: #c5d3ef;
 }
 
 .tag-inline {
@@ -1966,3 +2046,4 @@ body[data-theme="dark"] .icon-moon {
         justify-content: flex-start;
     }
 }
+

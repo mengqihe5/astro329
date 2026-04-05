@@ -1,0 +1,71 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export const prerender = true;
+const q = (Astro.url.searchParams.get("q") || "").trim();
+---
+<BaseLayout
+  title="全文搜索 | Micah Hale"
+  description="在文章与读后感中进行全文搜索。"
+  noindex={true}
+  currentPath={Astro.url.pathname}
+>
+  <section class="page-head">
+    <h2>全文搜索</h2>
+    <p class="meta">输入关键词，实时检索文章与书籍内容。</p>
+  </section>
+
+  <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+  <section class="card pagefind-shell">
+    <div id="pagefind-search" class="pagefind-search"></div>
+    <p id="pagefindHint" class="meta pagefind-hint"></p>
+  </section>
+
+  <script is:inline>
+    (() => {
+      const root = document.getElementById("pagefind-search");
+      const hint = document.getElementById("pagefindHint");
+      const initialQuery = {JSON.stringify(q)};
+      if (!root || !hint) return;
+
+      const showHint = (text) => {
+        hint.textContent = text;
+      };
+
+      const run = async () => {
+        try {
+          const mod = await import("/pagefind/pagefind-ui.js");
+          if (!mod || !mod.PagefindUI) {
+            showHint("Pagefind UI 加载失败。");
+            return;
+          }
+
+          new mod.PagefindUI({
+            element: "#pagefind-search",
+            showSubResults: true,
+            resetStyles: false,
+            translations: {
+              placeholder: "搜索标题、正文、标签...",
+              clear_search: "清空",
+              load_more: "加载更多",
+              zero_results: "没有找到结果",
+              search_label: "全文搜索",
+            },
+          });
+
+          if (initialQuery) {
+            const input = root.querySelector("input");
+            if (input) {
+              input.value = initialQuery;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          }
+        } catch {
+          showHint("当前是开发模式或索引未生成。请先运行 npm run build。");
+        }
+      };
+
+      run();
+    })();
+  </script>
+</BaseLayout>

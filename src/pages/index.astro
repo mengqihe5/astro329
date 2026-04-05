@@ -8,7 +8,11 @@ const dayParam = Astro.url.searchParams.get("day") || "";
 
 const data = await buildDashboardData(monthParam, dayParam);
 ---
-<BaseLayout title="首页" currentPath={Astro.url.pathname}>
+<BaseLayout
+  title="首页 | Micah Hale"
+  description={`${data.monthLabel} 的写作、游戏与阅读记录面板。`}
+  currentPath={Astro.url.pathname}
+>
   <section class="dashboard-shell">
     <header class="dash-greeting dash-greeting-row">
       <div>

@@ -1,4 +1,4 @@
----
+﻿---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadArticles } from "../../lib/blog.js";
 
@@ -34,6 +34,7 @@ const filteredArticles = allArticles.filter((article) => {
   const queryMatch = !queryLower || searchText.includes(queryLower);
   return yearMatch && tagMatch && queryMatch;
 });
+const fulltextUrl = queryRaw ? `/search/?q=${encodeURIComponent(queryRaw)}` : "/search/";
 
 function toArticlesUrl(next) {
   const nextParams = new URLSearchParams();
@@ -49,7 +50,11 @@ function toArticlesUrl(next) {
   return query ? `/articles/?${query}` : "/articles/";
 }
 ---
-<BaseLayout title="文章" currentPath={Astro.url.pathname}>
+<BaseLayout
+  title="文章 | Micah Hale"
+  description={`共 ${filteredArticles.length} 篇文章，支持搜索、时间归档与标签归档。`}
+  currentPath={Astro.url.pathname}
+>
   <section class="articles-layout">
     <div class="articles-main">
       <section class="page-head article-page-head">
@@ -94,9 +99,10 @@ function toArticlesUrl(next) {
             {selectedTag !== "all" && <input type="hidden" name="tag" value={selectedTag} />}
             <div class="article-search-row">
               <input type="text" name="q" value={queryRaw} placeholder="输入关键词..." />
-              <button type="submit" aria-label="搜索">⌕</button>
+              <button type="submit" aria-label="搜索">搜</button>
             </div>
           </form>
+          <a class="text-link article-fulltext-link" href={fulltextUrl}>全文搜索</a>
         </section>
 
         <section class="card article-side-block">
@@ -132,3 +138,4 @@ function toArticlesUrl(next) {
     </details>
   </section>
 </BaseLayout>
+

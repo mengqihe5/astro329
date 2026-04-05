@@ -26,7 +26,11 @@ if (mode === "tag") {
   }
 }
 ---
-<BaseLayout title="书架" currentPath={Astro.url.pathname}>
+<BaseLayout
+  title="书架 | Micah Hale"
+  description="按时间轴或标签浏览每月阅读书籍与读后感。"
+  currentPath={Astro.url.pathname}
+>
   <section class="page-head page-head-row">
     <div>
       <h2>书架</h2>
