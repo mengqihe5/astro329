@@ -165,7 +165,23 @@ function normalizeSnapshots(input) {
     }
     deduped.push(row);
   }
-  return deduped;
+
+  const monotonic = [];
+  let runningTotals = {};
+  for (const row of deduped) {
+    const current = normalizeMinutesMap(row.totalsMin);
+    const merged = { ...runningTotals };
+    for (const [key, value] of Object.entries(current)) {
+      const previous = Number(runningTotals[key] || 0);
+      merged[key] = value > previous ? value : previous;
+    }
+    runningTotals = merged;
+    monotonic.push({
+      ...row,
+      totalsMin: merged,
+    });
+  }
+  return monotonic;
 }
 
 function legacyDaysToSnapshots(days) {

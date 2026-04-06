@@ -732,6 +732,30 @@ function dedupeSnapshots(snapshots) {
   return result;
 }
 
+function enforceMonotonicSnapshots(snapshots) {
+  const rows = Array.isArray(snapshots) ? snapshots : [];
+  const result = [];
+  let runningTotals = {};
+
+  for (const snapshot of rows) {
+    const current = normalizeMinutesMap(snapshot.totalsMin);
+    const merged = { ...runningTotals };
+
+    for (const [key, value] of Object.entries(current)) {
+      const previous = Number(runningTotals[key] || 0);
+      merged[key] = value > previous ? value : previous;
+    }
+
+    runningTotals = merged;
+    result.push({
+      ...snapshot,
+      totalsMin: merged,
+    });
+  }
+
+  return result;
+}
+
 function normalizeSnapshots(input) {
   const rows = Array.isArray(input) ? input : [];
   const normalized = [];
@@ -740,7 +764,7 @@ function normalizeSnapshots(input) {
     if (snapshot) normalized.push(snapshot);
   }
   normalized.sort((a, b) => a.capturedAtMs - b.capturedAtMs);
-  return dedupeSnapshots(normalized);
+  return enforceMonotonicSnapshots(dedupeSnapshots(normalized));
 }
 
 function snapshotSourceToArray(source) {
