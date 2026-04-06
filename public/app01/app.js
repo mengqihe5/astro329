@@ -5,7 +5,7 @@ import { initMonthDropdowns } from "./modules/month-dropdown.js";
 import { initDashboardDayArticles } from "./modules/day-article-panel.js";
 import { initChartHorizontalWheelBehavior } from "./modules/chart-scroll.js";
 import { initBookCoverFallback } from "./modules/book-covers.js";
-import { initScrollStability, initTouchScrollClickGuard } from "./modules/scroll-stability.js";
+import { initScrollStability, initTouchScrollClickGuard, initSamePageLinkGuard } from "./modules/scroll-stability.js";
 
 const runSafe = function (fn) {
   try {
@@ -27,6 +27,7 @@ const initPage = function () {
   runSafe(initThemeToggle);
   runSafe(initScrollStability);
   runSafe(initTouchScrollClickGuard);
+  runSafe(initSamePageLinkGuard);
   runSafe(initKpiCounters);
   runSafe(initMutuallyExclusiveDetails);
   runSafe(initMonthDropdowns);

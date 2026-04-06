@@ -121,3 +121,36 @@ export function initTouchScrollClickGuard() {
     true
   );
 }
+
+export function initSamePageLinkGuard() {
+  if (!document.body || document.body.dataset.samePageLinkGuardBound === "true") return;
+  if (!window.matchMedia("(hover: none) and (pointer: coarse)").matches) return;
+  document.body.dataset.samePageLinkGuardBound = "true";
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const link = target.closest("a[href]");
+      if (!link) return;
+
+      let url;
+      try {
+        url = new URL(link.getAttribute("href") || "", window.location.origin);
+      } catch {
+        return;
+      }
+
+      const samePage = url.pathname === window.location.pathname && url.search === window.location.search;
+      if (!samePage) return;
+
+      if (link.classList.contains("nav-link") || link.classList.contains("active")) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    },
+    true
+  );
+}

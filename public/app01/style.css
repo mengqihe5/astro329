@@ -147,6 +147,17 @@ body[data-theme="dark"] {
     border: 1px solid transparent;
 }
 
+@media (hover: none) and (pointer: coarse) {
+    .nav-link {
+        touch-action: pan-y;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-link.active {
+        pointer-events: none;
+    }
+}
+
 .nav-link:hover,
 .nav-link.active {
     background: rgba(255, 255, 255, 0.2);
