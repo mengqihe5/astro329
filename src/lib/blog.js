@@ -189,6 +189,29 @@ export function formatMonthCompact(rawMonth) {
   return `${Number(match[1])}年${Number(match[2])}月`;
 }
 
+export function buildMonthRangeOptions(minMonth, maxMonth) {
+  const minIndex = monthKeyToIndex(minMonth);
+  const maxIndex = monthKeyToIndex(maxMonth);
+  if (minIndex === null || maxIndex === null) return [];
+
+  const start = Math.min(minIndex, maxIndex);
+  const end = Math.max(minIndex, maxIndex);
+  const rows = [];
+
+  for (let index = end; index >= start; index -= 1) {
+    const year = Math.floor(index / 12);
+    const month = String((index % 12) + 1).padStart(2, "0");
+    const value = `${year}-${month}`;
+    rows.push({
+      value,
+      label: formatMonthLabel(value),
+      compact: formatMonthCompact(value),
+    });
+  }
+
+  return rows;
+}
+
 function escapeSvgText(input) {
   return String(input || "")
     .replaceAll("&", "&amp;")
@@ -1038,6 +1061,7 @@ export async function buildDashboardData(monthParam, dayParam) {
     monthMax: maxMonth,
     monthLabel: formatMonthLabel(selectedMonth),
     monthButtonLabel: formatMonthCompact(selectedMonth),
+    monthOptions: buildMonthRangeOptions(minMonth, maxMonth),
     selectedMonth,
     selectedDay,
     selectedDayLabel: selectedDay || `${formatMonthLabel(selectedMonth)} 全部文章`,

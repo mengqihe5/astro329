@@ -1,6 +1,6 @@
 ﻿---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { fetchSteamGames, resolveMonth, formatMonthCompact, getMonthBounds } from "../../lib/blog.js";
+import { fetchSteamGames, resolveMonth, formatMonthCompact, getMonthBounds, buildMonthRangeOptions } from "../../lib/blog.js";
 
 const params = Astro.url.searchParams;
 const sortBy = params.get("sort") === "total" ? "total" : "month";
@@ -9,6 +9,7 @@ const selectedMonth = resolveMonth(params.get("month") || "", minMonth, maxMonth
 const monthButtonLabel = formatMonthCompact(selectedMonth);
 const currentMonth = maxMonth;
 const switchToMonthUrl = `/steam/?sort=month&month=${currentMonth}`;
+const monthOptions = buildMonthRangeOptions(minMonth, maxMonth);
 
 const steamResult = await fetchSteamGames(sortBy, selectedMonth);
 const games = steamResult.games;
@@ -35,14 +36,31 @@ const games = steamResult.games;
           data-month-max={maxMonth}
         >
           <summary class:list={["switch-link", "month-switch-trigger", sortBy === "month" && "active"]}>
-            <span class="month-dropdown-label" data-month-label>{monthButtonLabel}</span>
+            {
+              sortBy === "month" ? (
+                <span class="month-dropdown-label" data-month-label>{monthButtonLabel}</span>
+              ) : (
+                <a href={switchToMonthUrl} class="month-dropdown-label month-switch-link" data-month-label>{monthButtonLabel}</a>
+              )
+            }
             <span class="month-dropdown-arrow" data-month-arrow>▾</span>
           </summary>
           <form method="get" class="month-dropdown-panel" data-month-form>
             <input type="hidden" name="sort" value="month" />
             <input type="hidden" name="month" value={selectedMonth} data-month-input />
-            <p class="month-wheel-hint">滚轮移动光标，点击时间确认</p>
-            <div class="month-option-list" data-month-list></div>
+            <div class="month-option-list" data-month-list>
+              {
+                monthOptions.map((option) => (
+                  <a
+                    href={`/steam/?sort=month&month=${option.value}`}
+                    class:list={["month-option", option.value === selectedMonth && "selected"]}
+                    data-month-value={option.value}
+                  >
+                    {option.compact}
+                  </a>
+                ))
+              }
+            </div>
           </form>
         </details>
         <a href={`/steam/?sort=total&month=${selectedMonth}`} class:list={["switch-link", sortBy === "total" && "active"]}>总时长</a>

@@ -69,8 +69,8 @@ export function initMonthDropdowns() {
       }
       const rawMonthOptions = monthRangeCache.get(monthRangeKey) || [];
       const monthOptions = rawMonthOptions.length > 0 ? rawMonthOptions : [currentMonth];
+      if (!monthOptions.length) return;
 
-      listNode.innerHTML = "";
       let selectedNode = null;
       const fragment = document.createDocumentFragment();
 
@@ -91,7 +91,7 @@ export function initMonthDropdowns() {
         fragment.appendChild(button);
       });
 
-      listNode.appendChild(fragment);
+      listNode.replaceChildren(fragment);
 
       if (selectedNode) {
         requestAnimationFrame(function () {

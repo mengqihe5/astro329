@@ -26,8 +26,19 @@ const data = await buildDashboardData(monthParam, dayParam);
         </summary>
         <form method="get" class="month-dropdown-panel" data-month-form>
           <input type="hidden" name="month" value={data.selectedMonth} data-month-input />
-          <p class="month-wheel-hint">滚轮移动光标，点击时间确认</p>
-          <div class="month-option-list" data-month-list></div>
+          <div class="month-option-list" data-month-list>
+            {
+              data.monthOptions.map((option) => (
+                <a
+                  href={`/?month=${option.value}`}
+                  class:list={["month-option", option.value === data.selectedMonth && "selected"]}
+                  data-month-value={option.value}
+                >
+                  {option.compact}
+                </a>
+              ))
+            }
+          </div>
         </form>
       </details>
     </header>

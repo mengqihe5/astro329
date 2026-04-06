@@ -371,12 +371,15 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .month-option {
+    display: block;
+    width: 100%;
     border: 1px solid rgba(131, 164, 255, 0.25);
     background: rgba(255, 255, 255, 0.04);
     color: #e8f1ff;
     border-radius: 8px;
     padding: 7px 9px;
     text-align: left;
+    text-decoration: none;
     cursor: pointer;
 }
 
@@ -392,6 +395,11 @@ body[data-theme="dark"] .icon-moon {
 
 .steam-month-dropdown {
     display: inline-block;
+}
+
+.month-switch-link {
+    color: inherit;
+    text-decoration: none;
 }
 
 .sort-dropdown {
