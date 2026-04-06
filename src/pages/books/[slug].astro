@@ -24,7 +24,7 @@ const pageDescription = book
 <BaseLayout
   title={pageTitle}
   description={pageDescription}
-  ogImage={book?.cover || "/app01/book-covers/default-book.svg"}
+  ogImage={book?.coverFallback || book?.cover || "/app01/book-covers/default-book.svg"}
   ogType={book ? "article" : "website"}
   noindex={!book}
   currentPath={Astro.url.pathname}

@@ -4,6 +4,7 @@ import { initMutuallyExclusiveDetails } from "./modules/dropdowns.js";
 import { initMonthDropdowns } from "./modules/month-dropdown.js";
 import { initDashboardDayArticles } from "./modules/day-article-panel.js";
 import { initChartHorizontalWheelBehavior } from "./modules/chart-scroll.js";
+import { initBookCoverFallback } from "./modules/book-covers.js";
 
 const runSafe = function (fn) {
   try {
@@ -28,6 +29,7 @@ const initPage = function () {
   runSafe(initMonthDropdowns);
   runSafe(initDashboardDayArticles);
   runSafe(initChartHorizontalWheelBehavior);
+  runSafe(initBookCoverFallback);
 };
 
 document.addEventListener("astro:page-load", initPage);

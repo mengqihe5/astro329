@@ -1,5 +1,5 @@
 ﻿import { fileURLToPath } from "node:url";
-import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { readFileSync, statSync, writeFileSync } from "node:fs";
 
 export const SITE_PROFILE = {
   nickname: "Micah Hale",
@@ -63,18 +63,6 @@ const REVIEW_FILES = import.meta.glob("../../content/reviews/*.md", {
 });
 const STEAM_MONTHLY_FILE_URL = new URL("../../content/steam/monthly_hours.json", import.meta.url);
 const STEAM_DAILY_TOTALS_FILE_URL = new URL("../../content/steam/daily_totals.json", import.meta.url);
-const PUBLIC_BOOK_COVERS_DIR_URL = new URL("../../public/app01/book-covers/", import.meta.url);
-
-const BOOK_COVER_NAMES = (() => {
-  try {
-    const names = readdirSync(fileURLToPath(PUBLIC_BOOK_COVERS_DIR_URL), { withFileTypes: true })
-      .filter((entry) => entry.isFile())
-      .map((entry) => entry.name);
-    return new Set(names);
-  } catch {
-    return new Set();
-  }
-})();
 
 function nowMonth() {
   const d = new Date();
@@ -261,14 +249,50 @@ function buildAutoBookCover(slug, title, monthRaw) {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-function findBookCover(slug, title, monthRaw) {
-  for (const ext of BOOK_COVER_EXTENSIONS) {
-    const fileName = `${slug}${ext}`;
-    if (BOOK_COVER_NAMES.has(fileName)) {
-      return `/app01/book-covers/${fileName}`;
+function buildBookCoverCandidates(slug, title) {
+  const baseNames = [];
+  const pushBase = (value) => {
+    const text = String(value || "").trim();
+    if (!text) return;
+    if (!baseNames.includes(text)) baseNames.push(text);
+  };
+
+  pushBase(slug);
+  pushBase(title);
+
+  const candidates = [];
+  for (const name of baseNames) {
+    const encodedName = encodeURIComponent(name);
+    for (const ext of BOOK_COVER_EXTENSIONS) {
+      candidates.push(`/app01/book-covers/${encodedName}${ext}`);
     }
   }
-  return buildAutoBookCover(slug, title, monthRaw);
+  return candidates;
+}
+
+function buildBookCoverLookupUrl(title, slug, coverQueryRaw) {
+  const params = new URLSearchParams();
+  const normalizedTitle = String(title || "").trim();
+  const normalizedSlug = String(slug || "").trim();
+  const normalizedQuery = String(coverQueryRaw || "").trim();
+
+  if (normalizedTitle) params.set("title", normalizedTitle);
+  if (normalizedSlug) params.set("slug", normalizedSlug);
+  if (normalizedQuery) params.set("query", normalizedQuery);
+
+  if (![...params.keys()].length) return "";
+  return `/api/book-cover.json?${params.toString()}`;
+}
+
+function findBookCover(slug, title, monthRaw, coverQueryRaw) {
+  const coverCandidates = buildBookCoverCandidates(slug, title);
+  const coverFallback = buildAutoBookCover(slug, title, monthRaw);
+  return {
+    cover: coverCandidates[0] || coverFallback,
+    coverCandidates,
+    coverFallback,
+    coverLookupUrl: buildBookCoverLookupUrl(title, slug, coverQueryRaw),
+  };
 }
 
 function buildSummary(metadata, body) {
@@ -325,12 +349,17 @@ export function loadBooks(order = "desc") {
     const monthRaw = metadata.month || "未知月份";
     const bookTitle = metadata.title || slug.replace(/-/g, " ");
     const parsedTags = parseTags(metadata.tags);
+    const coverQuery = String(metadata.cover_query || metadata.coverquery || "").trim();
+    const coverInfo = findBookCover(slug, bookTitle, monthRaw, coverQuery);
     rows.push({
       slug,
       title: bookTitle,
       monthRaw,
       monthLabel: formatMonthLabel(monthRaw),
-      cover: findBookCover(slug, bookTitle, monthRaw),
+      cover: coverInfo.cover,
+      coverCandidates: coverInfo.coverCandidates,
+      coverFallback: coverInfo.coverFallback,
+      coverLookupUrl: coverInfo.coverLookupUrl,
       tags: parsedTags.length > 0 ? parsedTags : ["未分类"],
       reviewText: body,
     });
