@@ -86,9 +86,9 @@ npm run steam:snapshot -- --date 2026-04-04
 ```
 
 说明：
-- `content/steam/daily_totals.json` 保存每日总时长快照（按 appid）。
+- `content/steam/daily_totals.json` 保存分钟级快照（`capturedAt + totalsMin`，按 `Asia/Hong_Kong` 日界计算）。
 - `content/steam/monthly_hours.json` 保存已归档月份（过去月份冻结）。
-- 页面“本月时长/排序/首页条形图”基于快照差值计算，不再使用随机拆分或两周数据替代。
+- 页面“本月时长/排序/首页条形图”按快照区间差值分配：`<=6h` 高可信、`6h~48h` 估算、`>48h` 不分配到日柱而计入月总未知桶。
 
 ## 6. 部署到 Netlify（同步 GitHub）
 
@@ -103,7 +103,7 @@ npm run steam:snapshot -- --date 2026-04-04
 自动快照（推荐）：
 - 仓库已提供 GitHub Actions：`.github/workflows/steam-snapshot.yml`
 - 在 GitHub 仓库 Secrets 添加：`STEAM_API_KEY`、`STEAM_ID`
-- 工作流会每日更新快照并自动提交 `content/steam/*.json`
+- 工作流会每 30 分钟更新快照并自动提交 `content/steam/*.json`
 
 ## 7. 图片优化
 

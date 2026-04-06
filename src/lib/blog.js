@@ -40,6 +40,11 @@ const FALLBACK_STEAM_GAMES = [
 
 export const BLOG_START_MONTH = "2026-03";
 const STEAM_CACHE_TTL_MS = 5 * 60 * 1000;
+const STEAM_TIME_ZONE = "Asia/Hong_Kong";
+const STEAM_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
+const STEAM_DAY_MS = 24 * 60 * 60 * 1000;
+const STEAM_STRICT_GAP_SECONDS = 6 * 60 * 60;
+const STEAM_MAX_DISTRIBUTABLE_GAP_SECONDS = 48 * 60 * 60;
 const steamOwnedGamesCache = new Map();
 
 const ARTICLE_COVER_BY_SLUG = {
@@ -71,10 +76,7 @@ marked.setOptions({
 });
 
 function nowMonth() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  return year + "-" + month;
+  return steamDateKeyFromUtcMs(Date.now()).slice(0, 7);
 }
 
 function monthKeyToIndex(monthKey) {
@@ -517,24 +519,65 @@ function saveSteamMonthlyHours(value) {
   return writeJsonFile(STEAM_MONTHLY_FILE_URL, value);
 }
 
-function loadSteamDailyTotals() {
-  const payload = readJsonFile(STEAM_DAILY_TOTALS_FILE_URL, {});
-  const days = typeof payload.days === "object" && payload.days !== null ? payload.days : {};
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function steamDateKeyFromUtcMs(utcMs) {
+  const shifted = new Date(Number(utcMs) + STEAM_ZONE_OFFSET_MS);
+  const year = shifted.getUTCFullYear();
+  const month = pad2(shifted.getUTCMonth() + 1);
+  const day = pad2(shifted.getUTCDate());
+  return `${year}-${month}-${day}`;
+}
+
+function steamTodayKey() {
+  return steamDateKeyFromUtcMs(Date.now());
+}
+
+function steamNowMonth() {
+  return steamTodayKey().slice(0, 7);
+}
+
+function parseDateKey(input) {
+  const match = String(input || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
   return {
-    days,
-    updatedAt: typeof payload.updatedAt === "string" ? payload.updatedAt : "",
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
   };
 }
 
-function saveSteamDailyTotals(value) {
-  return writeJsonFile(STEAM_DAILY_TOTALS_FILE_URL, value);
+function steamDayStartUtcMs(dateKey) {
+  const parsed = parseDateKey(dateKey);
+  if (!parsed) return null;
+  return Date.UTC(parsed.year, parsed.month - 1, parsed.day, 0, 0, 0, 0) - STEAM_ZONE_OFFSET_MS;
+}
+
+function steamDayEndUtcMs(dateKey) {
+  const dayStart = steamDayStartUtcMs(dateKey);
+  if (dayStart === null) return null;
+  return dayStart + STEAM_DAY_MS - 1000;
+}
+
+function shiftSteamDate(dateKey, step) {
+  const dayStart = steamDayStartUtcMs(dateKey);
+  if (dayStart === null) return dateKey;
+  return steamDateKeyFromUtcMs(dayStart + Number(step || 0) * STEAM_DAY_MS);
 }
 
 function shiftMonth(monthKey, step) {
   const match = String(monthKey || "").match(/^(\d{4})-(\d{2})$/);
   if (!match) return monthKey;
-  const base = new Date(Number(match[1]), Number(match[2]) - 1 + Number(step || 0), 1);
-  return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}`;
+  const base = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1 + Number(step || 0), 1));
+  return `${base.getUTCFullYear()}-${pad2(base.getUTCMonth() + 1)}`;
+}
+
+function steamMonthStartUtcMs(monthKey) {
+  const match = String(monthKey || "").match(/^(\d{4})-(\d{2})$/);
+  if (!match) return null;
+  return Date.UTC(Number(match[1]), Number(match[2]) - 1, 1, 0, 0, 0, 0) - STEAM_ZONE_OFFSET_MS;
 }
 
 function normalizeMonthHours(value) {
@@ -555,42 +598,51 @@ function normalizeHoursMap(input) {
   return normalized;
 }
 
-function listSnapshotDates(days) {
-  return Object.keys(days)
-    .filter((dateKey) => /^\d{4}-\d{2}-\d{2}$/.test(dateKey))
-    .sort((a, b) => a.localeCompare(b));
+function normalizeMinutes(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  return Math.max(0, Math.round(number));
 }
 
-function buildMonthDiff(startTotals, endTotals) {
-  const startMap = normalizeHoursMap(startTotals);
-  const endMap = normalizeHoursMap(endTotals);
+function normalizeMinutesMap(input) {
+  const map = typeof input === "object" && input !== null ? input : {};
+  const normalized = {};
+  for (const [key, rawValue] of Object.entries(map)) {
+    const value = normalizeMinutes(rawValue);
+    if (value !== null) {
+      normalized[String(key)] = value;
+    }
+  }
+  return normalized;
+}
+
+function hoursToMinutes(hoursValue) {
+  const hours = Number(hoursValue);
+  if (!Number.isFinite(hours)) return null;
+  return Math.max(0, Math.round(hours * 60));
+}
+
+function minutesToHours(minutesValue) {
+  const minutes = Number(minutesValue);
+  if (!Number.isFinite(minutes)) return null;
+  return Math.round((Math.max(0, minutes) / 60) * 10) / 10;
+}
+
+function minutesMapToHoursMap(minutesMap) {
+  const source = typeof minutesMap === "object" && minutesMap !== null ? minutesMap : {};
   const result = {};
-  const keys = new Set([...Object.keys(startMap), ...Object.keys(endMap)]);
-  for (const key of keys) {
-    const startValue = Number(startMap[key] || 0);
-    const endValue = Number(endMap[key] || 0);
-    const diff = normalizeMonthHours(Math.max(0, endValue - startValue));
-    if (diff > 0) {
-      result[key] = diff;
+  for (const [key, rawMinutes] of Object.entries(source)) {
+    const value = minutesToHours(rawMinutes);
+    if (value && value > 0) {
+      result[String(key)] = value;
     }
   }
   return result;
 }
 
-function mergeHoursMap(target, source) {
-  const targetMap = target;
-  const sourceMap = normalizeHoursMap(source);
-  for (const [key, value] of Object.entries(sourceMap)) {
-    const nextValue = normalizeMonthHours((targetMap[key] || 0) + value);
-    if (nextValue > 0) {
-      targetMap[key] = nextValue;
-    }
-  }
-}
-
-function sameHoursMap(left, right) {
-  const a = normalizeHoursMap(left);
-  const b = normalizeHoursMap(right);
+function sameMinutesMap(left, right) {
+  const a = normalizeMinutesMap(left);
+  const b = normalizeMinutesMap(right);
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);
   if (aKeys.length !== bKeys.length) return false;
@@ -601,67 +653,316 @@ function sameHoursMap(left, right) {
   return true;
 }
 
+function normalizeSnapshot(rawSnapshot) {
+  if (!rawSnapshot || typeof rawSnapshot !== "object") return null;
+  const capturedAtRaw = String(rawSnapshot.capturedAt || "").trim();
+  const capturedAtMs = Date.parse(capturedAtRaw);
+  if (!Number.isFinite(capturedAtMs)) return null;
+  let totalsMin = {};
+  if (rawSnapshot.totalsMin && typeof rawSnapshot.totalsMin === "object") {
+    totalsMin = normalizeMinutesMap(rawSnapshot.totalsMin);
+  } else if (rawSnapshot.totals && typeof rawSnapshot.totals === "object") {
+    totalsMin = normalizeMinutesMap(rawSnapshot.totals);
+  } else if (rawSnapshot.totalsHours && typeof rawSnapshot.totalsHours === "object") {
+    const fromHours = {};
+    for (const [key, rawHours] of Object.entries(rawSnapshot.totalsHours)) {
+      const minutes = hoursToMinutes(rawHours);
+      if (minutes !== null) {
+        fromHours[String(key)] = minutes;
+      }
+    }
+    totalsMin = fromHours;
+  }
+  return {
+    capturedAt: new Date(capturedAtMs).toISOString(),
+    capturedAtMs,
+    totalsMin,
+  };
+}
+
+function legacyDaysToSnapshots(days) {
+  const source = typeof days === "object" && days !== null ? days : {};
+  const snapshots = [];
+  for (const [dateKey, hoursMap] of Object.entries(source)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) continue;
+    const capturedAtMs = steamDayEndUtcMs(dateKey);
+    if (capturedAtMs === null) continue;
+    const totalsMin = {};
+    const normalizedHours = normalizeHoursMap(hoursMap);
+    for (const [key, rawHours] of Object.entries(normalizedHours)) {
+      const minutes = hoursToMinutes(rawHours);
+      if (minutes !== null) {
+        totalsMin[String(key)] = minutes;
+      }
+    }
+    snapshots.push({
+      capturedAt: new Date(capturedAtMs).toISOString(),
+      capturedAtMs,
+      totalsMin,
+    });
+  }
+  return snapshots;
+}
+
+function dedupeSnapshots(snapshots) {
+  const result = [];
+  for (const snapshot of snapshots) {
+    const previous = result[result.length - 1];
+    if (previous && previous.capturedAt === snapshot.capturedAt) {
+      result[result.length - 1] = snapshot;
+      continue;
+    }
+    result.push(snapshot);
+  }
+  return result;
+}
+
+function normalizeSnapshots(input) {
+  const rows = Array.isArray(input) ? input : [];
+  const normalized = [];
+  for (const row of rows) {
+    const snapshot = normalizeSnapshot(row);
+    if (snapshot) normalized.push(snapshot);
+  }
+  normalized.sort((a, b) => a.capturedAtMs - b.capturedAtMs);
+  return dedupeSnapshots(normalized);
+}
+
+function snapshotSourceToArray(source) {
+  if (Array.isArray(source)) return source;
+  if (source && typeof source === "object" && Array.isArray(source.snapshots)) return source.snapshots;
+  if (source && typeof source === "object" && source.days) return legacyDaysToSnapshots(source.days);
+  return [];
+}
+
+function loadSteamDailyTotals() {
+  const payload = readJsonFile(STEAM_DAILY_TOTALS_FILE_URL, {});
+  const sourceSnapshots = normalizeSnapshots(payload.snapshots);
+  const legacySnapshots = sourceSnapshots.length === 0 ? normalizeSnapshots(legacyDaysToSnapshots(payload.days)) : [];
+  const snapshots = sourceSnapshots.length > 0 ? sourceSnapshots : legacySnapshots;
+  return {
+    timezone: typeof payload.timezone === "string" ? payload.timezone : STEAM_TIME_ZONE,
+    snapshots,
+    updatedAt: typeof payload.updatedAt === "string" ? payload.updatedAt : "",
+  };
+}
+
+function saveSteamDailyTotals(value) {
+  const snapshots = normalizeSnapshots(value && value.snapshots);
+  return writeJsonFile(STEAM_DAILY_TOTALS_FILE_URL, {
+    version: 2,
+    timezone: STEAM_TIME_ZONE,
+    updatedAt: typeof value?.updatedAt === "string" ? value.updatedAt : new Date().toISOString(),
+    snapshots: snapshots.map((snapshot) => ({
+      capturedAt: snapshot.capturedAt,
+      totalsMin: snapshot.totalsMin,
+    })),
+  });
+}
+
+function listSnapshotDates(snapshotSource) {
+  const snapshots = normalizeSnapshots(snapshotSourceToArray(snapshotSource));
+  const dates = new Set();
+  for (const snapshot of snapshots) {
+    dates.add(steamDateKeyFromUtcMs(snapshot.capturedAtMs));
+  }
+  return Array.from(dates).sort((a, b) => a.localeCompare(b));
+}
+
+function buildPositiveDeltaMinutes(startTotals, endTotals) {
+  const startMap = normalizeMinutesMap(startTotals);
+  const endMap = normalizeMinutesMap(endTotals);
+  const delta = {};
+  const keys = new Set([...Object.keys(startMap), ...Object.keys(endMap)]);
+  for (const key of keys) {
+    const startValue = Number(startMap[key] || 0);
+    const endValue = Number(endMap[key] || 0);
+    const diff = endValue - startValue;
+    if (diff > 0) {
+      delta[key] = diff;
+    }
+  }
+  return delta;
+}
+
+function overlapMs(startA, endA, startB, endB) {
+  const start = Math.max(startA, startB);
+  const end = Math.min(endA, endB);
+  return Math.max(0, end - start);
+}
+
+function allocateMinutesByDay(startMs, endMs, deltaMinutes) {
+  const totalMs = endMs - startMs;
+  if (totalMs <= 0 || deltaMinutes <= 0) return {};
+  const allocations = {};
+  let cursor = startMs;
+  while (cursor < endMs) {
+    const dayKey = steamDateKeyFromUtcMs(cursor);
+    const nextDayStart = steamDayStartUtcMs(shiftSteamDate(dayKey, 1));
+    if (nextDayStart === null) break;
+    const segmentEnd = Math.min(endMs, nextDayStart);
+    const segmentMs = Math.max(0, segmentEnd - cursor);
+    if (segmentMs > 0) {
+      allocations[dayKey] = (allocations[dayKey] || 0) + (deltaMinutes * segmentMs) / totalMs;
+    }
+    cursor = segmentEnd > cursor ? segmentEnd : cursor + 1;
+  }
+  return allocations;
+}
+
+function withLiveSnapshot(snapshots, monthKey, currentTotalsMap) {
+  const rows = normalizeSnapshots(snapshots);
+  if (monthKey !== steamNowMonth()) return rows;
+  if (!currentTotalsMap || typeof currentTotalsMap !== "object") return rows;
+  const currentMap = normalizeMinutesMap(currentTotalsMap);
+  if (!Object.keys(currentMap).length) return rows;
+  const nowMs = Date.now();
+  const latest = rows[rows.length - 1];
+  if (latest && nowMs <= latest.capturedAtMs) return rows;
+  if (latest && sameMinutesMap(latest.totalsMin, currentMap)) return rows;
+  return [
+    ...rows,
+    {
+      capturedAt: new Date(nowMs).toISOString(),
+      capturedAtMs: nowMs,
+      totalsMin: currentMap,
+    },
+  ];
+}
+
+function analyzeMonthSnapshots(snapshotSource, monthKey, currentTotalsMap = null) {
+  const snapshots = withLiveSnapshot(snapshotSourceToArray(snapshotSource), monthKey, currentTotalsMap);
+  const monthStart = steamMonthStartUtcMs(monthKey);
+  const nextMonthStart = steamMonthStartUtcMs(shiftMonth(monthKey, 1));
+  if (monthStart === null || nextMonthStart === null) {
+    return { dayTotals: {}, dayEstimated: {}, monthTotals: {}, unknownTotals: {} };
+  }
+
+  const dayTotals = {};
+  const dayEstimated = {};
+  const monthTotals = {};
+  const unknownTotals = {};
+
+  for (let i = 1; i < snapshots.length; i += 1) {
+    const prev = snapshots[i - 1];
+    const curr = snapshots[i];
+    if (!prev || !curr) continue;
+    if (curr.capturedAtMs <= prev.capturedAtMs) continue;
+
+    const intervalMs = curr.capturedAtMs - prev.capturedAtMs;
+    const gapSeconds = intervalMs / 1000;
+    const monthOverlapMs = overlapMs(prev.capturedAtMs, curr.capturedAtMs, monthStart, nextMonthStart);
+    if (monthOverlapMs <= 0) continue;
+
+    const deltaMap = buildPositiveDeltaMinutes(prev.totalsMin, curr.totalsMin);
+    const largeGap = gapSeconds > STEAM_MAX_DISTRIBUTABLE_GAP_SECONDS;
+    const estimatedGap = gapSeconds > STEAM_STRICT_GAP_SECONDS;
+
+    for (const [appId, deltaMinutes] of Object.entries(deltaMap)) {
+      if (deltaMinutes <= 0) continue;
+
+      if (largeGap) {
+        const monthShare = (deltaMinutes * monthOverlapMs) / intervalMs;
+        if (monthShare <= 0) continue;
+        monthTotals[appId] = (monthTotals[appId] || 0) + monthShare;
+        unknownTotals[appId] = (unknownTotals[appId] || 0) + monthShare;
+        continue;
+      }
+
+      const allocated = allocateMinutesByDay(prev.capturedAtMs, curr.capturedAtMs, deltaMinutes);
+      for (const [dateKey, value] of Object.entries(allocated)) {
+        if (!dateKey.startsWith(`${monthKey}-`)) continue;
+        if (value <= 0) continue;
+        const bucket = dayTotals[dateKey] || {};
+        bucket[appId] = (bucket[appId] || 0) + value;
+        dayTotals[dateKey] = bucket;
+        monthTotals[appId] = (monthTotals[appId] || 0) + value;
+        if (estimatedGap) {
+          dayEstimated[dateKey] = true;
+        }
+      }
+    }
+  }
+
+  return { dayTotals, dayEstimated, monthTotals, unknownTotals };
+}
+
 function buildTotalsMapFromGames(games) {
   const map = {};
   for (const game of games) {
     const appKey = String(game.appId || "");
     if (!appKey) continue;
-    const value = normalizeMonthHours(game.playtimeHours);
-    map[appKey] = value === null ? 0 : value;
+    const fromMinutes = normalizeMinutes(game.playtimeMinutes);
+    if (fromMinutes !== null) {
+      map[appKey] = fromMinutes;
+      continue;
+    }
+    const fromHours = hoursToMinutes(game.playtimeHours);
+    map[appKey] = fromHours === null ? 0 : fromHours;
   }
   return map;
 }
 
-function computeMonthTotalsFromDaily(days, monthKey) {
-  const dates = listSnapshotDates(days);
-  const result = {};
-  for (let i = 1; i < dates.length; i += 1) {
-    const currentDate = dates[i];
-    if (!currentDate.startsWith(monthKey + "-")) continue;
-    const prevDate = dates[i - 1];
-    const diff = buildMonthDiff(days[prevDate], days[currentDate]);
-    mergeHoursMap(result, diff);
-  }
-  return result;
+function computeMonthTotalsFromDaily(snapshotSource, monthKey, currentTotalsMap = null) {
+  const { monthTotals } = analyzeMonthSnapshots(snapshotSource, monthKey, currentTotalsMap);
+  return minutesMapToHoursMap(monthTotals);
 }
 
-function isMonthClosedInDaily(days, monthKey) {
-  const nextMonth = shiftMonth(monthKey, 1);
-  const nextMonthFirstDay = `${nextMonth}-01`;
-  const dates = listSnapshotDates(days);
-  return dates.some((dateKey) => dateKey >= nextMonthFirstDay);
+function isMonthClosedInDaily(snapshotSource, monthKey) {
+  const nextMonthFirstDay = `${shiftMonth(monthKey, 1)}-01`;
+  const snapshots = normalizeSnapshots(snapshotSourceToArray(snapshotSource));
+  return snapshots.some((snapshot) => steamDateKeyFromUtcMs(snapshot.capturedAtMs) >= nextMonthFirstDay);
 }
 
 function updateDailyTotalsStore(games, options = {}) {
   const dailyStore = loadSteamDailyTotals();
-  const days = typeof dailyStore.days === "object" && dailyStore.days !== null ? dailyStore.days : {};
+  const snapshotsBefore = normalizeSnapshots(dailyStore.snapshots);
+  const beforeSerialized = JSON.stringify(snapshotsBefore.map((item) => [item.capturedAt, item.totalsMin]));
   const manualDate = String(options.dateKey || "").trim();
-  const todayKey = /^\d{4}-\d{2}-\d{2}$/.test(manualDate) ? manualDate : formatLocalDate(new Date());
-  const todayTotals = buildTotalsMapFromGames(games);
-  const previousTotals = normalizeHoursMap(days[todayKey]);
+  const hasManualDate = /^\d{4}-\d{2}-\d{2}$/.test(manualDate);
+  const dateKey = hasManualDate ? manualDate : steamTodayKey();
+  const capturedAtMs = hasManualDate ? steamDayEndUtcMs(dateKey) : Date.now();
+  const currentTotals = buildTotalsMapFromGames(games);
 
-  let changed = false;
-  if (!sameHoursMap(previousTotals, todayTotals)) {
-    days[todayKey] = todayTotals;
-    dailyStore.days = days;
+  let snapshots = snapshotsBefore;
+  if (hasManualDate) {
+    snapshots = snapshots.filter((snapshot) => steamDateKeyFromUtcMs(snapshot.capturedAtMs) !== dateKey);
+  }
+
+  const latest = snapshots[snapshots.length - 1];
+  const latestDateKey = latest ? steamDateKeyFromUtcMs(latest.capturedAtMs) : "";
+  const shouldAppend = !latest || !sameMinutesMap(latest.totalsMin, currentTotals) || latestDateKey !== dateKey || hasManualDate;
+
+  if (shouldAppend && capturedAtMs !== null) {
+    snapshots = normalizeSnapshots([
+      ...snapshots,
+      {
+        capturedAt: new Date(capturedAtMs).toISOString(),
+        totalsMin: currentTotals,
+      },
+    ]);
+  }
+
+  const afterSerialized = JSON.stringify(snapshots.map((item) => [item.capturedAt, item.totalsMin]));
+  const changed = beforeSerialized !== afterSerialized;
+  if (changed) {
+    dailyStore.snapshots = snapshots;
     dailyStore.updatedAt = new Date().toISOString();
     saveSteamDailyTotals(dailyStore);
-    changed = true;
   }
 
   return {
-    days,
+    snapshots,
     updatedAt: dailyStore.updatedAt,
     changed,
-    dateKey: todayKey,
+    dateKey,
   };
 }
 
-function syncMonthlyArchiveFromDaily(monthlyHours, dailyDays, persist = false) {
-  const currentMonth = nowMonth();
+function syncMonthlyArchiveFromDaily(monthlyHours, dailySnapshots, persist = false) {
+  const currentMonth = steamNowMonth();
   const mergedMonthly = typeof monthlyHours === "object" && monthlyHours !== null ? monthlyHours : {};
-  const days = typeof dailyDays === "object" && dailyDays !== null ? dailyDays : {};
-  const dateKeys = listSnapshotDates(days);
+  const dateKeys = listSnapshotDates(dailySnapshots);
   const monthCandidates = new Set();
   for (const dateKey of dateKeys) {
     monthCandidates.add(dateKey.slice(0, 7));
@@ -675,8 +976,8 @@ function syncMonthlyArchiveFromDaily(monthlyHours, dailyDays, persist = false) {
   for (const monthKey of sortedMonths) {
     if (monthKey >= currentMonth) continue;
     if (Object.prototype.hasOwnProperty.call(mergedMonthly, monthKey)) continue;
-    if (!isMonthClosedInDaily(days, monthKey)) continue;
-    mergedMonthly[monthKey] = computeMonthTotalsFromDaily(days, monthKey);
+    if (!isMonthClosedInDaily(dailySnapshots, monthKey)) continue;
+    mergedMonthly[monthKey] = computeMonthTotalsFromDaily(dailySnapshots, monthKey);
     monthlyChanged = true;
   }
 
@@ -688,38 +989,23 @@ function syncMonthlyArchiveFromDaily(monthlyHours, dailyDays, persist = false) {
 
 function loadSteamSources() {
   const dailyStore = loadSteamDailyTotals();
-  const monthlyHours = syncMonthlyArchiveFromDaily(loadSteamMonthlyHours(), dailyStore.days, false);
+  const monthlyHours = syncMonthlyArchiveFromDaily(loadSteamMonthlyHours(), dailyStore.snapshots, false);
   return {
     monthlyHours,
-    dailyDays: dailyStore.days,
+    dailySnapshots: dailyStore.snapshots,
   };
-}
-
-function buildCurrentMonthLiveTotals(dailyDays, monthKey, currentTotalsMap) {
-  const monthlyTotals = computeMonthTotalsFromDaily(dailyDays, monthKey);
-  const dates = listSnapshotDates(dailyDays);
-  const todayKey = formatLocalDate(new Date());
-  const latestDate = dates
-    .filter((dateKey) => dateKey <= todayKey && dateKey.startsWith(`${monthKey}-`))
-    .pop();
-  if (!latestDate) return monthlyTotals;
-  const latestTotals = normalizeHoursMap(dailyDays[latestDate]);
-  const liveGap = buildMonthDiff(latestTotals, currentTotalsMap);
-  const merged = { ...monthlyTotals };
-  mergeHoursMap(merged, liveGap);
-  return merged;
 }
 
 function attachMonthHours(games, monthKey, sources = null, currentTotalsMap = null) {
   const monthlyPayload = sources && typeof sources.monthlyHours === "object" && sources.monthlyHours !== null ? sources.monthlyHours : loadSteamMonthlyHours();
   const monthBucket = typeof monthlyPayload[monthKey] === "object" && monthlyPayload[monthKey] !== null ? monthlyPayload[monthKey] : {};
-  const dailyDays = sources && typeof sources.dailyDays === "object" && sources.dailyDays !== null
-    ? sources.dailyDays
-    : loadSteamDailyTotals().days;
-  const currentMonth = nowMonth();
-  const monthBucketFromDaily = monthKey === currentMonth && currentTotalsMap
-    ? buildCurrentMonthLiveTotals(dailyDays, monthKey, currentTotalsMap)
-    : computeMonthTotalsFromDaily(dailyDays, monthKey);
+  const snapshotSource = sources && Array.isArray(sources.dailySnapshots)
+    ? sources.dailySnapshots
+    : loadSteamDailyTotals().snapshots;
+  const currentMonth = steamNowMonth();
+  const monthBucketFromDaily = monthKey === currentMonth
+    ? computeMonthTotalsFromDaily(snapshotSource, monthKey, currentTotalsMap)
+    : computeMonthTotalsFromDaily(snapshotSource, monthKey, null);
 
   return games.map((game) => {
     const appKey = String(game.appId || "");
@@ -789,11 +1075,15 @@ async function fetchSteamOwnedCards(apiKey, steamId) {
 
   return gameList.map((game) => {
     const appId = game.appid;
+    const playtimeMinutes = normalizeMinutes(game.playtime_forever) || 0;
+    const recentMinutes = normalizeMinutes(game.playtime_2weeks) || 0;
     return {
       appId,
       name: game.name || `App ${appId}`,
-      playtimeHours: Math.round(((game.playtime_forever || 0) / 60) * 10) / 10,
-      recentHours: Math.round(((game.playtime_2weeks || 0) / 60) * 10) / 10,
+      playtimeMinutes,
+      recentMinutes,
+      playtimeHours: minutesToHours(playtimeMinutes) || 0,
+      recentHours: minutesToHours(recentMinutes) || 0,
       coverUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/header.jpg`,
     };
   });
@@ -880,7 +1170,7 @@ export async function syncSteamSnapshots(options = {}) {
   const monthlyBeforeSnapshot = JSON.stringify(monthlyBefore);
   const monthlyBeforeKeys = Object.keys(monthlyBefore);
   const dailyStore = updateDailyTotalsStore(cards, { dateKey });
-  const monthlyAfter = syncMonthlyArchiveFromDaily(monthlyBefore, dailyStore.days, false);
+  const monthlyAfter = syncMonthlyArchiveFromDaily(monthlyBefore, dailyStore.snapshots, false);
   const updatedMonthly = monthlyBeforeSnapshot !== JSON.stringify(monthlyAfter);
 
   if (updatedMonthly) {
@@ -899,71 +1189,37 @@ export async function syncSteamSnapshots(options = {}) {
   };
 }
 
-function buildDailyDiffByDate(days, monthKey) {
-  const dates = listSnapshotDates(days);
-  const dailyDiff = {};
-  for (let i = 1; i < dates.length; i += 1) {
-    const currentDate = dates[i];
-    if (!currentDate.startsWith(`${monthKey}-`)) continue;
-    const prevDate = dates[i - 1];
-    dailyDiff[currentDate] = buildMonthDiff(days[prevDate], days[currentDate]);
-  }
-  return dailyDiff;
-}
-
-function buildLiveGapForToday(days, monthKey, currentTotalsMap) {
-  if (monthKey !== nowMonth()) return null;
-  if (!currentTotalsMap || typeof currentTotalsMap !== "object") return null;
-  const dates = listSnapshotDates(days);
-  const todayKey = formatLocalDate(new Date());
-  const latestDate = dates
-    .filter((dateKey) => dateKey <= todayKey && dateKey.startsWith(`${monthKey}-`))
-    .pop();
-  if (!latestDate) return null;
-  const latestTotals = normalizeHoursMap(days[latestDate]);
-  const gap = buildMonthDiff(latestTotals, currentTotalsMap);
-  if (!Object.keys(gap).length) return null;
-  return {
-    dateKey: todayKey.startsWith(`${monthKey}-`) ? todayKey : latestDate,
-    diffMap: gap,
-  };
-}
-
-export function buildDailyGameChart(monthKey, allGames, dailyDays = null) {
+export function buildDailyGameChart(monthKey, allGames, dailySnapshots = null) {
   const [year, month] = monthKey.split("-").map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
-  const isCurrentMonth = monthKey === nowMonth();
-  const currentDay = Math.max(1, new Date().getDate());
+  const isCurrentMonth = monthKey === steamNowMonth();
+  const todayParsed = parseDateKey(steamTodayKey());
+  const currentDay = todayParsed ? Math.max(1, todayParsed.day) : 1;
   const chartLength = isCurrentMonth ? Math.min(daysInMonth, currentDay) : daysInMonth;
-  const days = dailyDays && typeof dailyDays === "object" ? dailyDays : loadSteamDailyTotals().days;
+  const snapshotSource = dailySnapshots !== null ? dailySnapshots : loadSteamDailyTotals().snapshots;
   const gameList = Array.isArray(allGames) ? allGames : [];
   const currentTotalsMap = buildTotalsMapFromGames(gameList);
   const gameMetaByAppId = new Map(
     gameList.map((item) => [String(item.appId || ""), { name: item.name || "", coverUrl: item.coverUrl || "" }])
   );
 
-  const dayDiffByDate = buildDailyDiffByDate(days, monthKey);
-  const liveGap = buildLiveGapForToday(days, monthKey, currentTotalsMap);
-  if (liveGap) {
-    const merged = { ...normalizeHoursMap(dayDiffByDate[liveGap.dateKey]) };
-    mergeHoursMap(merged, liveGap.diffMap);
-    dayDiffByDate[liveGap.dateKey] = merged;
-  }
+  const analysis = analyzeMonthSnapshots(snapshotSource, monthKey, currentTotalsMap);
+  const dayDiffByDate = analysis.dayTotals;
 
   const rows = [];
   for (let day = 1; day <= chartLength; day += 1) {
-    const dateKey = `${monthKey}-${String(day).padStart(2, "0")}`;
-    const diffMap = normalizeHoursMap(dayDiffByDate[dateKey]);
-    let totalHours = 0;
-    let maxHours = 0;
+    const dateKey = `${monthKey}-${pad2(day)}`;
+    const diffMap = dayDiffByDate[dateKey] && typeof dayDiffByDate[dateKey] === "object" ? dayDiffByDate[dateKey] : {};
+    let totalMinutes = 0;
+    let maxMinutes = 0;
     let maxAppId = "";
 
     for (const [appId, value] of Object.entries(diffMap)) {
-      const hours = Number(value || 0);
-      if (hours <= 0) continue;
-      totalHours += hours;
-      if (hours > maxHours) {
-        maxHours = hours;
+      const minutes = Number(value || 0);
+      if (minutes <= 0) continue;
+      totalMinutes += minutes;
+      if (minutes > maxMinutes) {
+        maxMinutes = minutes;
         maxAppId = appId;
       }
     }
@@ -971,8 +1227,8 @@ export function buildDailyGameChart(monthKey, allGames, dailyDays = null) {
     const meta = gameMetaByAppId.get(maxAppId) || { name: "", coverUrl: "" };
     rows.push({
       day,
-      totalHours: Math.round(totalHours * 10) / 10,
-      maxHours: Math.round(maxHours * 10) / 10,
+      totalHours: minutesToHours(totalMinutes) || 0,
+      maxHours: minutesToHours(maxMinutes) || 0,
       maxCoverUrl: meta.coverUrl || "",
       maxGameName: meta.name || "",
     });
@@ -1048,7 +1304,7 @@ export async function buildDashboardData(monthParam, dayParam) {
   const calendarWeeks = buildArticleCalendar(selectedMonth, monthArticles);
   const calendarArticles = selectedDay ? monthArticles.filter((item) => item.date === selectedDay) : monthArticles;
 
-  const dailyGameChart = buildDailyGameChart(selectedMonth, steamResult.games, steamSources.dailyDays);
+  const dailyGameChart = buildDailyGameChart(selectedMonth, steamResult.games, steamSources.dailySnapshots);
   const dailyGameChartDisplay = mergeGameFreeChartRows(dailyGameChart);
 
   const axisMaxValue = Math.max(0, ...dailyGameChart.map((row) => Number(row.totalHours || 0)));
