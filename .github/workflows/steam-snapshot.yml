@@ -31,9 +31,11 @@ jobs:
         run: npm run steam:snapshot
 
       - name: Commit changed snapshot files
+        id: commit_snapshots
         run: |
           if [[ -z "$(git status --porcelain content/steam/daily_totals.json content/steam/monthly_hours.json)" ]]; then
             echo "No snapshot changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -41,3 +43,10 @@ jobs:
           git add content/steam/daily_totals.json content/steam/monthly_hours.json
           git commit -m "chore: update steam snapshots"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Netlify deploy
+        if: ${{ steps.commit_snapshots.outputs.changed == 'true' && secrets.NETLIFY_BUILD_HOOK_URL != '' }}
+        env:
+          NETLIFY_BUILD_HOOK_URL: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
+        run: curl --fail --show-error --silent -X POST -H "Content-Type: application/json" -d '{}' "$NETLIFY_BUILD_HOOK_URL"
