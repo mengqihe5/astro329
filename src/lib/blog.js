@@ -39,7 +39,7 @@ const FALLBACK_STEAM_GAMES = [
 ];
 
 export const BLOG_START_MONTH = "2026-03";
-const STEAM_CACHE_TTL_MS = 5 * 60 * 1000;
+const STEAM_CACHE_TTL_MS = 1 * 60 * 1000;
 const STEAM_TIME_ZONE = "Asia/Hong_Kong";
 const STEAM_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
 const STEAM_DAY_MS = 24 * 60 * 60 * 1000;
@@ -818,8 +818,20 @@ function withLiveSnapshot(snapshots, monthKey, currentTotalsMap) {
   if (!Object.keys(currentMap).length) return rows;
   const nowMs = Date.now();
   const latest = rows[rows.length - 1];
-  if (latest && nowMs <= latest.capturedAtMs) return rows;
   if (latest && sameMinutesMap(latest.totalsMin, currentMap)) return rows;
+  if (latest && nowMs <= latest.capturedAtMs) {
+    const latestDateKey = steamDateKeyFromUtcMs(latest.capturedAtMs);
+    const todayKey = steamTodayKey();
+    if (latestDateKey === todayKey) {
+      const updated = rows.slice(0, -1);
+      updated.push({
+        ...latest,
+        totalsMin: currentMap,
+      });
+      return updated;
+    }
+    return rows;
+  }
   return [
     ...rows,
     {
