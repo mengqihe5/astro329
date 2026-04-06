@@ -36,7 +36,7 @@ const pageDescription = article ? article.summary : "该文章不存在或已被
         <article class="card article-full article-detail" data-pagefind-body>
           <h2>{article.title}</h2>
           <p class="meta">{article.date}</p>
-          <div class="article-content" set:html={article.content}></div>
+          <div class="article-content" set:html={article.contentHtml || article.content}></div>
         </article>
       </>
     ) : (

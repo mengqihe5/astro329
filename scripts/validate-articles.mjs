@@ -42,13 +42,13 @@ function parseFrontMatter(rawText) {
 
   return {
     metadata,
-    body: lines.slice(bodyStartIndex).join("\n").trim(),
+    body: lines.slice(bodyStartIndex).join("\n").trimEnd(),
   };
 }
 
 function buildFileText(metadata, body) {
   const lines = REQUIRED_KEYS.map((key) => `${key}: ${metadata[key] ?? ""}`);
-  return `${lines.join("\n")}\n\n${String(body || "").trim()}\n`;
+  return `${lines.join("\n")}\n\n${String(body || "").trimEnd()}\n`;
 }
 
 let totalIssues = 0;

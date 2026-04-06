@@ -1,5 +1,6 @@
 ﻿import { fileURLToPath } from "node:url";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
+import { marked } from "marked";
 
 export const SITE_PROFILE = {
   nickname: "Micah Hale",
@@ -63,6 +64,11 @@ const REVIEW_FILES = import.meta.glob("../../content/reviews/*.md", {
 });
 const STEAM_MONTHLY_FILE_URL = new URL("../../content/steam/monthly_hours.json", import.meta.url);
 const STEAM_DAILY_TOTALS_FILE_URL = new URL("../../content/steam/daily_totals.json", import.meta.url);
+
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+});
 
 function nowMonth() {
   const d = new Date();
@@ -131,7 +137,7 @@ function parseFrontMatter(rawText) {
     bodyStartIndex = index + 1;
   }
 
-  const body = lines.slice(bodyStartIndex).join("\n").trim();
+  const body = lines.slice(bodyStartIndex).join("\n").trimEnd();
   return { metadata, body };
 }
 
@@ -286,6 +292,10 @@ function buildSummary(metadata, body) {
   return compact.length > 90 ? `${compact.slice(0, 90)}...` : compact;
 }
 
+function renderMarkdown(input) {
+  return marked.parse(String(input || ""));
+}
+
 export function loadArticles(order = "desc", options = {}) {
   const includeDraft = Boolean(options.includeDraft);
   const rows = Object.entries(ARTICLE_FILES).map(([pathName, rawText]) => {
@@ -307,6 +317,7 @@ export function loadArticles(order = "desc", options = {}) {
       date,
       summary: buildSummary(metadata, body),
       content: body,
+      contentHtml: renderMarkdown(body),
       tags,
       cover,
       draft,
