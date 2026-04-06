@@ -1,5 +1,3 @@
-const coverLookupCache = new Map();
-
 function parseCoverCandidates(rawValue) {
   if (!rawValue) return [];
   try {
@@ -19,33 +17,9 @@ function parseCoverCandidates(rawValue) {
   }
 }
 
-async function resolveOnlineCover(lookupUrl) {
-  const key = String(lookupUrl || "").trim();
-  if (!key) return "";
-  if (coverLookupCache.has(key)) return coverLookupCache.get(key);
-
-  try {
-    const response = await fetch(key, {
-      headers: { accept: "application/json" },
-    });
-    if (!response.ok) {
-      coverLookupCache.set(key, "");
-      return "";
-    }
-    const payload = await response.json();
-    const imageUrl = String(payload?.imageUrl || "").trim();
-    coverLookupCache.set(key, imageUrl);
-    return imageUrl;
-  } catch {
-    coverLookupCache.set(key, "");
-    return "";
-  }
-}
-
 function bindBookCover(img) {
   const candidates = parseCoverCandidates(img.dataset.coverCandidates);
   const fallbackSrc = String(img.dataset.coverFallback || "/app01/book-covers/default-book.svg").trim();
-  const lookupUrl = String(img.dataset.coverLookupUrl || "").trim();
 
   let nextIndex = 0;
   const currentSrc = String(img.getAttribute("src") || "").trim();
@@ -54,7 +28,6 @@ function bindBookCover(img) {
     nextIndex = currentIndex + 1;
   }
 
-  let resolvingOnline = false;
   const applyFallback = () => {
     if (!fallbackSrc) return;
     if (img.getAttribute("src") === fallbackSrc) return;
@@ -70,31 +43,7 @@ function bindBookCover(img) {
         return;
       }
     }
-
-    if (img.dataset.onlineTried === "1") {
-      applyFallback();
-      return;
-    }
-
-    if (resolvingOnline) return;
-    resolvingOnline = true;
-
-    resolveOnlineCover(lookupUrl)
-      .then((onlineUrl) => {
-        img.dataset.onlineTried = "1";
-        if (onlineUrl) {
-          img.src = onlineUrl;
-          return;
-        }
-        applyFallback();
-      })
-      .catch(() => {
-        img.dataset.onlineTried = "1";
-        applyFallback();
-      })
-      .finally(() => {
-        resolvingOnline = false;
-      });
+    applyFallback();
   };
 
   img.addEventListener("error", handleError);

@@ -270,28 +270,13 @@ function buildBookCoverCandidates(slug, title) {
   return candidates;
 }
 
-function buildBookCoverLookupUrl(title, slug, coverQueryRaw) {
-  const params = new URLSearchParams();
-  const normalizedTitle = String(title || "").trim();
-  const normalizedSlug = String(slug || "").trim();
-  const normalizedQuery = String(coverQueryRaw || "").trim();
-
-  if (normalizedTitle) params.set("title", normalizedTitle);
-  if (normalizedSlug) params.set("slug", normalizedSlug);
-  if (normalizedQuery) params.set("query", normalizedQuery);
-
-  if (![...params.keys()].length) return "";
-  return `/api/book-cover.json?${params.toString()}`;
-}
-
-function findBookCover(slug, title, monthRaw, coverQueryRaw) {
+function findBookCover(slug, title, monthRaw) {
   const coverCandidates = buildBookCoverCandidates(slug, title);
   const coverFallback = buildAutoBookCover(slug, title, monthRaw);
   return {
     cover: coverCandidates[0] || coverFallback,
     coverCandidates,
     coverFallback,
-    coverLookupUrl: buildBookCoverLookupUrl(title, slug, coverQueryRaw),
   };
 }
 
@@ -349,8 +334,7 @@ export function loadBooks(order = "desc") {
     const monthRaw = metadata.month || "未知月份";
     const bookTitle = metadata.title || slug.replace(/-/g, " ");
     const parsedTags = parseTags(metadata.tags);
-    const coverQuery = String(metadata.cover_query || metadata.coverquery || "").trim();
-    const coverInfo = findBookCover(slug, bookTitle, monthRaw, coverQuery);
+    const coverInfo = findBookCover(slug, bookTitle, monthRaw);
     rows.push({
       slug,
       title: bookTitle,
@@ -359,7 +343,6 @@ export function loadBooks(order = "desc") {
       cover: coverInfo.cover,
       coverCandidates: coverInfo.coverCandidates,
       coverFallback: coverInfo.coverFallback,
-      coverLookupUrl: coverInfo.coverLookupUrl,
       tags: parsedTags.length > 0 ? parsedTags : ["未分类"],
       reviewText: body,
     });

@@ -1952,6 +1952,14 @@ body[data-theme="dark"] .icon-moon {
     line-height: 1.7;
 }
 
+.article-content img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin: 14px 0;
+}
+
 .md-view {
     margin: 10px 0 0;
     white-space: pre-wrap;
