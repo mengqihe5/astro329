@@ -11,15 +11,15 @@ body {
     --card: rgba(13, 22, 38, 0.78);
     --border: rgba(255, 255, 255, 0.2);
     --link: #ffd074;
+    --site-bg-overlay: linear-gradient(rgba(10, 7, 24, 0.62), rgba(10, 7, 24, 0.62));
     margin: 0;
     min-height: 100svh;
+    position: relative;
     color: var(--text-main);
     font-family: var(--font-main);
     -webkit-text-size-adjust: 100%;
     overscroll-behavior-y: contain;
-    background:
-        linear-gradient(rgba(10, 7, 24, 0.62), rgba(10, 7, 24, 0.62)),
-        url("backgrounds/云朵-伊蕾娜-窗边.png") center / cover fixed no-repeat;
+    background: #0a1024;
 }
 
 html,
@@ -60,9 +60,7 @@ body[data-theme="dark"] {
     --card: rgba(8, 12, 24, 0.82);
     --border: rgba(255, 255, 255, 0.26);
     --link: #ffd074;
-    background:
-        linear-gradient(rgba(6, 6, 14, 0.74), rgba(6, 6, 14, 0.74)),
-        url("backgrounds/云朵-伊蕾娜-窗边.png") center / cover fixed no-repeat;
+    --site-bg-overlay: linear-gradient(rgba(6, 6, 14, 0.74), rgba(6, 6, 14, 0.74));
 }
 
 * {
@@ -70,8 +68,28 @@ body[data-theme="dark"] {
 }
 
 .layout {
+    position: relative;
+    z-index: 2;
     min-height: 100vh;
     min-height: 100svh;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+}
+
+body::before {
+    z-index: 0;
+    background: url("backgrounds/云朵-伊蕾娜-窗边.png") center / cover no-repeat;
+}
+
+body::after {
+    z-index: 1;
+    background: var(--site-bg-overlay);
 }
 
 .sidebar {
@@ -208,13 +226,6 @@ body[data-theme="dark"] .icon-sun {
 
 body[data-theme="dark"] .icon-moon {
     display: block;
-}
-
-@media (hover: none) and (pointer: coarse) {
-    body,
-    body[data-theme="dark"] {
-        background-attachment: scroll, scroll;
-    }
 }
 
 .content {
@@ -2332,102 +2343,6 @@ body[data-theme="dark"] .icon-moon {
     }
 }
 
-@media (max-width: 1024px) and (min-width: 820px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: var(--sidebar-width);
-        height: 100svh;
-        padding: 30px 10px 16px;
-    }
-
-    .content {
-        margin-left: var(--sidebar-width);
-        padding: 24px 18px;
-    }
-
-    .book-timeline {
-        padding-left: 22px;
-    }
-
-    .timeline-node::before {
-        left: -20px;
-    }
-
-    .dash-kpi-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 18px;
-    }
-
-    .dashboard-shell {
-        padding: 18px;
-        border-radius: 20px;
-    }
-
-    .dash-greeting h2 {
-        font-size: 38px;
-    }
-
-    .dash-subtitle {
-        font-size: 16px;
-    }
-
-    .dash-analysis-grid {
-        grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.2fr);
-        margin-top: 22px;
-        gap: 14px;
-    }
-
-    .calendar-grid {
-        min-height: 390px;
-        gap: 8px;
-    }
-
-    .calendar-cell {
-        height: 48px;
-        font-size: 14px;
-    }
-
-    .month-picker-form,
-    .month-sort-form {
-        width: auto;
-        justify-content: flex-start;
-    }
-
-    .month-picker-form select,
-    .month-picker-form input[type="month"],
-    .month-sort-form input[type="month"] {
-        width: auto;
-    }
-
-    .daily-chart-shell {
-        grid-template-columns: 52px 1fr;
-    }
-
-    .daily-axis-y,
-    .daily-bars-wrap {
-        height: 350px;
-    }
-
-    .daily-bar-stack {
-        height: 240px;
-    }
-
-    .daily-axis-foot {
-        margin-left: 62px;
-    }
-
-    .steam-grid {
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 14px;
-    }
-
-    .article-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
 @media (max-width: 760px) {
     .dashboard-shell {
         padding: 12px;
@@ -2672,6 +2587,99 @@ body[data-theme="dark"] .icon-moon {
 
     .progress-head .time-pair {
         white-space: nowrap;
+    }
+}
+
+@media (max-width: 1366px) and (min-width: 768px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100svh;
+        padding: 30px 10px 16px;
+    }
+
+    .content {
+        margin-left: var(--sidebar-width);
+        padding: 28px 24px;
+    }
+
+    .dash-kpi-grid {
+        grid-template-columns: repeat(3, minmax(220px, 1fr));
+        gap: 40px;
+    }
+
+    .dashboard-shell {
+        padding: 18px;
+        border-radius: 20px;
+    }
+
+    .dash-greeting h2 {
+        font-size: 38px;
+    }
+
+    .dash-subtitle {
+        font-size: 16px;
+    }
+
+    .dash-analysis {
+        margin-top: 40px;
+        padding: 14px 16px 16px;
+    }
+
+    .dash-analysis-head h3 {
+        font-size: 38px;
+    }
+
+    .dash-analysis-grid {
+        grid-template-columns: minmax(460px, 1.75fr) minmax(260px, 1fr);
+        margin-top: 40px;
+        gap: 40px;
+    }
+
+    .calendar-grid {
+        min-height: 390px;
+        gap: 8px;
+    }
+
+    .calendar-cell {
+        height: 48px;
+        font-size: 14px;
+    }
+
+    .month-picker-form,
+    .month-sort-form {
+        width: auto;
+        justify-content: flex-start;
+    }
+
+    .month-picker-form select,
+    .month-picker-form input[type="month"],
+    .month-sort-form input[type="month"] {
+        width: auto;
+    }
+
+    .daily-chart-shell {
+        grid-template-columns: 52px 1fr;
+    }
+
+    .daily-axis-y,
+    .daily-bars-wrap {
+        height: 350px;
+    }
+
+    .daily-bar-stack {
+        height: 240px;
+    }
+
+    .daily-axis-foot {
+        margin-left: 62px;
+    }
+
+    .steam-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 14px;
     }
 }
 
