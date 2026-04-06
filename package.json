@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "new:article": "node scripts/new-article.mjs",
     "books:covers": "node scripts/fetch-book-covers.mjs",
+    "books:covers:force": "node scripts/fetch-book-covers.mjs --force",
     "content:check": "node scripts/validate-articles.mjs",
     "content:fix": "node scripts/validate-articles.mjs --fix",
     "steam:snapshot": "node scripts/sync-steam-snapshot.mjs",

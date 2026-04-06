@@ -1,24 +1,31 @@
-﻿export function initMutuallyExclusiveDetails() {
-  const dropdowns = document.querySelectorAll(".sort-dropdown, .timeline-sort, .month-dropdown");
+export function initMutuallyExclusiveDetails() {
+  const getDropdowns = function () {
+    return document.querySelectorAll(".sort-dropdown, .timeline-sort, .month-dropdown");
+  };
 
   const closeAll = function (eventTarget) {
-    dropdowns.forEach(function (drop) {
+    getDropdowns().forEach(function (drop) {
       if (!drop.open) return;
       if (eventTarget && drop.contains(eventTarget)) return;
       drop.removeAttribute("open");
     });
   };
 
-  dropdowns.forEach(function (drop) {
+  getDropdowns().forEach(function (drop) {
+    if (drop.dataset.exclusiveBound === "true") return;
+    drop.dataset.exclusiveBound = "true";
     drop.addEventListener("toggle", function () {
       if (!drop.open) return;
-      dropdowns.forEach(function (other) {
+      getDropdowns().forEach(function (other) {
         if (other !== drop) {
           other.removeAttribute("open");
         }
       });
     });
   });
+
+  if (document.body.dataset.exclusiveDropdownGlobalBound === "true") return;
+  document.body.dataset.exclusiveDropdownGlobalBound = "true";
 
   document.addEventListener("pointerdown", function (event) {
     closeAll(event.target);

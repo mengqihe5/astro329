@@ -5,6 +5,11 @@ import sharp from "sharp";
 const REVIEW_DIR = resolve(process.cwd(), "content", "reviews");
 const COVER_DIR = resolve(process.cwd(), "public", "app01", "book-covers");
 const COVER_EXTS = [".webp", ".png", ".jpg", ".jpeg", ".svg"];
+const COVER_QUERY_ALIASES = new Map([
+  ["卡拉马佐夫兄弟", "The Brothers Karamazov"],
+  ["素食者", "The Vegetarian"],
+  ["百年孤独", "One Hundred Years of Solitude"],
+]);
 
 const argv = process.argv.slice(2);
 const force = argv.includes("--force");
@@ -41,7 +46,8 @@ function getReviewItems() {
     const metadata = parseFrontMatter(raw);
     const slug = basename(fileName, ".md");
     const title = String(metadata.title || "").trim() || slug;
-    return { fileName, filePath, slug, title };
+    const coverQuery = String(metadata.cover_query || metadata.coverquery || "").trim();
+    return { fileName, filePath, slug, title, coverQuery };
   });
 }
 
@@ -61,7 +67,7 @@ function normalizeQuery(input) {
     .trim();
 }
 
-function buildQueries(title, slug) {
+function buildQueries(title, slug, coverQueryRaw) {
   const queries = [];
   const push = (value) => {
     const text = normalizeQuery(value);
@@ -69,6 +75,9 @@ function buildQueries(title, slug) {
     if (!queries.includes(text)) queries.push(text);
   };
 
+  push(coverQueryRaw);
+  push(COVER_QUERY_ALIASES.get(normalizeQuery(title)));
+  push(COVER_QUERY_ALIASES.get(normalizeQuery(slug)));
   push(title);
   push(slug);
 
@@ -202,7 +211,7 @@ async function run() {
       continue;
     }
 
-    const queries = buildQueries(item.title, item.slug);
+    const queries = buildQueries(item.title, item.slug, item.coverQuery);
     if (!queries.length) {
       failed += 1;
       console.log(`[fail] ${item.slug} -> 无可用搜索关键词`);

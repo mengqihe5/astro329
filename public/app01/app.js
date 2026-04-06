@@ -13,9 +13,27 @@ const runSafe = function (fn) {
   }
 };
 
-runSafe(initThemeToggle);
-runSafe(initKpiCounters);
-runSafe(initMutuallyExclusiveDetails);
-runSafe(initMonthDropdowns);
-runSafe(initDashboardDayArticles);
-runSafe(initChartHorizontalWheelBehavior);
+let lastInitUrl = "";
+
+const initPage = function () {
+  const currentUrl = window.location.pathname + window.location.search;
+  if (currentUrl === lastInitUrl) {
+    return;
+  }
+  lastInitUrl = currentUrl;
+
+  runSafe(initThemeToggle);
+  runSafe(initKpiCounters);
+  runSafe(initMutuallyExclusiveDetails);
+  runSafe(initMonthDropdowns);
+  runSafe(initDashboardDayArticles);
+  runSafe(initChartHorizontalWheelBehavior);
+};
+
+document.addEventListener("astro:page-load", initPage);
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initPage, { once: true });
+} else {
+  initPage();
+}
