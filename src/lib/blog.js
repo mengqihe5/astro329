@@ -67,8 +67,14 @@ const REVIEW_FILES = import.meta.glob("../../content/reviews/*.md", {
   query: "?raw",
   import: "default",
 });
+const STEAM_JSON_FILES = import.meta.glob("../../content/steam/*.json", {
+  eager: true,
+  import: "default",
+});
 const STEAM_MONTHLY_FILE_URL = new URL("../../content/steam/monthly_hours.json", import.meta.url);
 const STEAM_DAILY_TOTALS_FILE_URL = new URL("../../content/steam/daily_totals.json", import.meta.url);
+const STEAM_MONTHLY_BUNDLED = STEAM_JSON_FILES["../../content/steam/monthly_hours.json"] || {};
+const STEAM_DAILY_BUNDLED = STEAM_JSON_FILES["../../content/steam/daily_totals.json"] || {};
 
 marked.setOptions({
   gfm: true,
@@ -511,8 +517,17 @@ function writeJsonFile(fileUrl, value) {
   }
 }
 
+function cloneJsonValue(value, fallbackValue = {}) {
+  if (typeof value !== "object" || value === null) return fallbackValue;
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return fallbackValue;
+  }
+}
+
 function loadSteamMonthlyHours() {
-  return readJsonFile(STEAM_MONTHLY_FILE_URL, {});
+  return readJsonFile(STEAM_MONTHLY_FILE_URL, cloneJsonValue(STEAM_MONTHLY_BUNDLED, {}));
 }
 
 function saveSteamMonthlyHours(value) {
@@ -736,7 +751,7 @@ function snapshotSourceToArray(source) {
 }
 
 function loadSteamDailyTotals() {
-  const payload = readJsonFile(STEAM_DAILY_TOTALS_FILE_URL, {});
+  const payload = readJsonFile(STEAM_DAILY_TOTALS_FILE_URL, cloneJsonValue(STEAM_DAILY_BUNDLED, {}));
   const sourceSnapshots = normalizeSnapshots(payload.snapshots);
   const legacySnapshots = sourceSnapshots.length === 0 ? normalizeSnapshots(legacyDaysToSnapshots(payload.days)) : [];
   const snapshots = sourceSnapshots.length > 0 ? sourceSnapshots : legacySnapshots;
