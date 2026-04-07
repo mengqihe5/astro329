@@ -364,6 +364,7 @@ export function loadBooks(order = "desc") {
       coverFallback: coverInfo.coverFallback,
       tags: parsedTags.length > 0 ? parsedTags : ["未分类"],
       reviewText: body,
+      reviewHtml: renderMarkdown(body),
     });
   }
 

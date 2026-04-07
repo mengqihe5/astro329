@@ -38,7 +38,7 @@ const pageDescription = book
         <article class="card article-full article-detail" data-pagefind-body>
           <h2>{book.title}</h2>
           <p class="meta">{book.monthLabel}</p>
-          <div class="article-content">{book.reviewText}</div>
+          <div class="article-content" set:html={book.reviewHtml || book.reviewText}></div>
         </article>
       </>
     ) : (
