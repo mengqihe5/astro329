@@ -2591,6 +2591,23 @@ body[data-theme="dark"] .icon-moon {
 }
 
 @media (max-width: 1366px) and (min-width: 768px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    :root {
+        --desktop-reference-width: 1366;
+        --tablet-desktop-scale: calc(100vw / (var(--desktop-reference-width) * 1px));
+    }
+
+    @supports (zoom: 1) {
+        html {
+            zoom: var(--tablet-desktop-scale);
+        }
+
+        body {
+            width: calc(var(--desktop-reference-width) * 1px);
+            min-width: calc(var(--desktop-reference-width) * 1px);
+            overflow-x: hidden;
+        }
+    }
+
     .sidebar {
         position: fixed;
         top: 0;
