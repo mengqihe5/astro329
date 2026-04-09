@@ -932,6 +932,7 @@ function buildStableDeltaMinutes(prevSnapshot, currSnapshot, nextSnapshot = null
 function analyzeMonthSnapshots(snapshotSource, monthKey, currentTotalsMap = null) {
   const withLive = withLiveSnapshot(snapshotSourceToArray(snapshotSource), monthKey, currentTotalsMap, { monotonic: false });
   const snapshots = collapseSnapshotsByDay(withLive);
+  const isCurrentMonth = monthKey === steamNowMonth();
   const monthStart = steamMonthStartUtcMs(monthKey);
   const nextMonthStart = steamMonthStartUtcMs(shiftMonth(monthKey, 1));
   if (monthStart === null || nextMonthStart === null) {
@@ -963,6 +964,20 @@ function analyzeMonthSnapshots(snapshotSource, monthKey, currentTotalsMap = null
       if (deltaMinutes <= 0) continue;
 
       if (largeGap) {
+        if (isCurrentMonth) {
+          const allocated = allocateMinutesByDay(prev.capturedAtMs, curr.capturedAtMs, deltaMinutes);
+          for (const [dateKey, value] of Object.entries(allocated)) {
+            if (!dateKey.startsWith(`${monthKey}-`)) continue;
+            if (value <= 0) continue;
+            const bucket = dayTotals[dateKey] || {};
+            bucket[appId] = (bucket[appId] || 0) + value;
+            dayTotals[dateKey] = bucket;
+            monthTotals[appId] = (monthTotals[appId] || 0) + value;
+            dayEstimated[dateKey] = true;
+          }
+          continue;
+        }
+
         const monthShare = (deltaMinutes * monthOverlapMs) / intervalMs;
         if (monthShare <= 0) continue;
         monthTotals[appId] = (monthTotals[appId] || 0) + monthShare;
