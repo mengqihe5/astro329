@@ -64,10 +64,14 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Trigger Netlify deploy
-        if: ${{ steps.commit_snapshots.outputs.changed == 'true' && secrets.NETLIFY_BUILD_HOOK_URL != '' }}
+        if: ${{ steps.commit_snapshots.outputs.changed == 'true' }}
         env:
           NETLIFY_BUILD_HOOK_URL: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
         run: |
+          if [[ -z "$NETLIFY_BUILD_HOOK_URL" ]]; then
+            echo "NETLIFY_BUILD_HOOK_URL is empty, skip deploy hook."
+            exit 0
+          fi
           curl --fail --show-error --silent -X POST \
             -H "Content-Type: application/json" \
             -d '{}' \
