@@ -8,6 +8,8 @@ const ENV_FILE = resolve(process.cwd(), ".env");
 const STEAM_TIME_ZONE = "Asia/Hong_Kong";
 const STEAM_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
 const STEAM_DAY_MS = 24 * 60 * 60 * 1000;
+const STEAM_FETCH_RETRY_TIMES = 2;
+const STEAM_FETCH_TIMEOUT_MS = 12_000;
 
 function parseArgs(argv) {
   const result = { date: "" };
@@ -371,13 +373,34 @@ async function fetchSteamOwnedGames(apiKey, steamId) {
   endpoint.searchParams.set("include_appinfo", "1");
   endpoint.searchParams.set("include_played_free_games", "1");
   endpoint.searchParams.set("format", "json");
-
-  const response = await fetch(endpoint, { method: "GET" });
-  if (!response.ok) {
-    throw new Error(`Steam API request failed: ${response.status}`);
+  let payload = null;
+  let lastError = null;
+  for (let attempt = 0; attempt <= STEAM_FETCH_RETRY_TIMES; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), STEAM_FETCH_TIMEOUT_MS);
+    try {
+      const response = await fetch(endpoint, { method: "GET", signal: controller.signal });
+      if (!response.ok) {
+        throw new Error(`Steam API request failed: ${response.status}`);
+      }
+      payload = await response.json();
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+      if (attempt < STEAM_FETCH_RETRY_TIMES) {
+        const delayMs = 600 * (attempt + 1);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
-  const payload = await response.json();
+  if (!payload) {
+    throw lastError || new Error("Steam API request failed");
+  }
+
   const games = Array.isArray(payload?.response?.games) ? payload.response.games : [];
   return games.map((game) => ({
     appId: String(game.appid || ""),

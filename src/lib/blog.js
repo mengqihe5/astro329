@@ -45,6 +45,8 @@ const STEAM_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
 const STEAM_DAY_MS = 24 * 60 * 60 * 1000;
 const STEAM_STRICT_GAP_SECONDS = 6 * 60 * 60;
 const STEAM_MAX_DISTRIBUTABLE_GAP_SECONDS = 48 * 60 * 60;
+const STEAM_FETCH_RETRY_TIMES = 2;
+const STEAM_FETCH_TIMEOUT_MS = 12_000;
 const steamOwnedGamesCache = new Map();
 
 const ARTICLE_COVER_BY_SLUG = {
@@ -1177,13 +1179,34 @@ async function fetchSteamOwnedCards(apiKey, steamId) {
   endpoint.searchParams.set("include_appinfo", "1");
   endpoint.searchParams.set("include_played_free_games", "1");
   endpoint.searchParams.set("format", "json");
-
-  const response = await fetch(endpoint, { method: "GET" });
-  if (!response.ok) {
-    throw new Error("steam-response-not-ok");
+  let payload = null;
+  let lastError = null;
+  for (let attempt = 0; attempt <= STEAM_FETCH_RETRY_TIMES; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), STEAM_FETCH_TIMEOUT_MS);
+    try {
+      const response = await fetch(endpoint, { method: "GET", signal: controller.signal });
+      if (!response.ok) {
+        throw new Error(`steam-response-not-ok:${response.status}`);
+      }
+      payload = await response.json();
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+      if (attempt < STEAM_FETCH_RETRY_TIMES) {
+        const delayMs = 600 * (attempt + 1);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
-  const payload = await response.json();
+  if (!payload) {
+    throw lastError || new Error("steam-fetch-failed");
+  }
+
   const gameList = payload?.response?.games || [];
   if (!Array.isArray(gameList) || gameList.length === 0) {
     return [];
@@ -1254,8 +1277,8 @@ export async function fetchSteamGames(sortBy, monthKey) {
       };
     }
     return {
-      games: withRatio(FALLBACK_STEAM_GAMES, sortMode, monthKey, archiveSources, buildTotalsMapFromGames(FALLBACK_STEAM_GAMES)),
-      notice: "Steam API 调用失败，当前显示示例数据。",
+      games: [],
+      notice: "Steam API 调用失败，且无可用缓存数据。",
     };
   }
 }
@@ -1347,6 +1370,7 @@ export function buildDailyGameChart(monthKey, allGames, dailySnapshots = null) {
       maxHours: minutesToHours(maxMinutes) || 0,
       maxCoverUrl: meta.coverUrl || "",
       maxGameName: meta.name || "",
+      estimated: Boolean(analysis.dayEstimated[dateKey]),
     });
   }
 
@@ -1422,6 +1446,7 @@ export async function buildDashboardData(monthParam, dayParam) {
 
   const dailyGameChart = buildDailyGameChart(selectedMonth, steamResult.games, steamSources.dailySnapshots);
   const dailyGameChartDisplay = mergeGameFreeChartRows(dailyGameChart);
+  const dailyEstimatedDays = dailyGameChart.filter((row) => row.estimated && Number(row.totalHours || 0) > 0).length;
 
   const axisMaxValue = Math.max(0, ...dailyGameChart.map((row) => Number(row.totalHours || 0)));
   const axisMax = Math.round(axisMaxValue * 10) / 10;
@@ -1464,6 +1489,7 @@ export async function buildDashboardData(monthParam, dayParam) {
     calendarArticles,
     dailyGameChart,
     dailyGameChartDisplay,
+    dailyEstimatedDays,
     monthlyArticles: monthArticles,
     monthlyBooks: monthBooks,
     monthlyGames: monthGames,
