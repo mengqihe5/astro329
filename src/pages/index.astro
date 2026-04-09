@@ -158,19 +158,19 @@ const data = await buildDashboardData(monthParam, dayParam);
                   <div class="daily-bar-col">
                     <div class="daily-bar-stack">
                       <div class="daily-bar-item">
-                        <span class="daily-bar-value">{row.estimated ? `~${row.maxHours}` : row.maxHours}</span>
+                        <span class="daily-bar-value">{row.maxHours}</span>
                         <span
                           class="daily-bar max"
                           style={`height: ${row.maxHeight}%; ${row.maxHours > 0 ? "min-height: 2px;" : "min-height: 0;"}`}
-                          title={`单日最长游戏 ${row.maxHours}h${row.estimated ? "（估算）" : ""}`}
+                          title={`单日最长游戏 ${row.maxHours}h`}
                         ></span>
                       </div>
                       <div class="daily-bar-item">
-                        <span class="daily-bar-value">{row.estimated ? `~${row.totalHours}` : row.totalHours}</span>
+                        <span class="daily-bar-value">{row.totalHours}</span>
                         <span
                           class="daily-bar total"
                           style={`height: ${row.totalHeight}%; ${row.totalHours > 0 ? "min-height: 2px;" : "min-height: 0;"}`}
-                          title={`单日总时长 ${row.totalHours}h${row.estimated ? "（估算）" : ""}`}
+                          title={`单日总时长 ${row.totalHours}h`}
                         ></span>
                       </div>
                     </div>
@@ -196,7 +196,6 @@ const data = await buildDashboardData(monthParam, dayParam);
             <span><i class="legend-dot max"></i>本日最长游戏时长</span>
             <span><i class="legend-dot total"></i>本日总时长</span>
           </div>
-          {data.dailyEstimatedDays > 0 ? <p class="meta">注：~ 表示估算值（{data.dailyEstimatedDays} 天）。</p> : null}
         </div>
       </article>
     </section>

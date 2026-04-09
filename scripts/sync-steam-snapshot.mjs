@@ -8,8 +8,8 @@ const ENV_FILE = resolve(process.cwd(), ".env");
 const STEAM_TIME_ZONE = "Asia/Hong_Kong";
 const STEAM_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
 const STEAM_DAY_MS = 24 * 60 * 60 * 1000;
-const STEAM_FETCH_RETRY_TIMES = 2;
-const STEAM_FETCH_TIMEOUT_MS = 12_000;
+const STEAM_FETCH_RETRY_TIMES = 3;
+const STEAM_FETCH_TIMEOUT_MS = 20_000;
 
 function parseArgs(argv) {
   const result = { date: "" };
@@ -247,38 +247,13 @@ function listSnapshotDates(snapshots) {
 
 function isMonthClosedInSnapshots(snapshots, monthKey) {
   const nextMonthFirstDay = `${shiftMonth(monthKey, 1)}-01`;
-  return normalizeSnapshots(snapshots).some((snapshot) => steamDateKeyFromUtcMs(snapshot.capturedAtMs) >= nextMonthFirstDay);
-}
-
-function buildPositiveDeltaMinutes(startTotals, endTotals) {
-  const start = normalizeMinutesMap(startTotals);
-  const end = normalizeMinutesMap(endTotals);
-  const result = {};
-  const keys = new Set([...Object.keys(start), ...Object.keys(end)]);
-  for (const key of keys) {
-    const diff = Number(end[key] || 0) - Number(start[key] || 0);
-    if (diff > 0) result[key] = diff;
-  }
-  return result;
+  return normalizeSnapshots(snapshots, { monotonic: false }).some((snapshot) => steamDateKeyFromUtcMs(snapshot.capturedAtMs) >= nextMonthFirstDay);
 }
 
 function overlapMs(startA, endA, startB, endB) {
   const start = Math.max(startA, startB);
   const end = Math.min(endA, endB);
   return Math.max(0, end - start);
-}
-
-function collapseSnapshotsByDay(snapshots) {
-  const rows = Array.isArray(snapshots) ? snapshots : [];
-  const latestByDay = new Map();
-  for (const snapshot of rows) {
-    const dayKey = steamDateKeyFromUtcMs(snapshot.capturedAtMs);
-    const previous = latestByDay.get(dayKey);
-    if (!previous || snapshot.capturedAtMs >= previous.capturedAtMs) {
-      latestByDay.set(dayKey, snapshot);
-    }
-  }
-  return Array.from(latestByDay.values()).sort((a, b) => a.capturedAtMs - b.capturedAtMs);
 }
 
 function buildStableDeltaMinutes(prevSnapshot, currSnapshot, nextSnapshot = null) {
@@ -310,7 +285,7 @@ function buildStableDeltaMinutes(prevSnapshot, currSnapshot, nextSnapshot = null
 }
 
 function computeMonthTotalsFromSnapshots(snapshots, monthKey) {
-  const rows = collapseSnapshotsByDay(normalizeSnapshots(snapshots, { monotonic: false }));
+  const rows = normalizeSnapshots(snapshots, { monotonic: false });
   const monthStart = steamMonthStartUtcMs(monthKey);
   const nextMonthStart = steamMonthStartUtcMs(shiftMonth(monthKey, 1));
   if (monthStart === null || nextMonthStart === null) return {};
