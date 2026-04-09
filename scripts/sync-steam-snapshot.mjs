@@ -147,7 +147,7 @@ function normalizeSnapshot(rawSnapshot) {
   };
 }
 
-function normalizeSnapshots(input) {
+function normalizeSnapshots(input, options = {}) {
   const source = Array.isArray(input) ? input : [];
   const result = [];
   for (const row of source) {
@@ -164,6 +164,10 @@ function normalizeSnapshots(input) {
       continue;
     }
     deduped.push(row);
+  }
+
+  if (options.monotonic === false) {
+    return deduped;
   }
 
   const monotonic = [];
@@ -203,18 +207,18 @@ function legacyDaysToSnapshots(days) {
       totalsMin,
     });
   }
-  return normalizeSnapshots(snapshots);
+  return normalizeSnapshots(snapshots, { monotonic: false });
 }
 
 function loadDailySnapshots(payload) {
-  const snapshots = normalizeSnapshots(payload?.snapshots);
+  const snapshots = normalizeSnapshots(payload?.snapshots, { monotonic: false });
   if (snapshots.length > 0) return snapshots;
   return legacyDaysToSnapshots(payload?.days);
 }
 
 function serializeSnapshotsForCompare(snapshots) {
   return JSON.stringify(
-    normalizeSnapshots(snapshots).map((snapshot) => [snapshot.capturedAt, normalizeMinutesMap(snapshot.totalsMin)])
+    normalizeSnapshots(snapshots, { monotonic: false }).map((snapshot) => [snapshot.capturedAt, normalizeMinutesMap(snapshot.totalsMin)])
   );
 }
 
@@ -233,7 +237,7 @@ function sameMinutesMap(left, right) {
 
 function listSnapshotDates(snapshots) {
   const dates = new Set();
-  for (const snapshot of normalizeSnapshots(snapshots)) {
+  for (const snapshot of normalizeSnapshots(snapshots, { monotonic: false })) {
     dates.add(steamDateKeyFromUtcMs(snapshot.capturedAtMs));
   }
   return Array.from(dates).sort((a, b) => a.localeCompare(b));
@@ -262,8 +266,49 @@ function overlapMs(startA, endA, startB, endB) {
   return Math.max(0, end - start);
 }
 
+function collapseSnapshotsByDay(snapshots) {
+  const rows = Array.isArray(snapshots) ? snapshots : [];
+  const latestByDay = new Map();
+  for (const snapshot of rows) {
+    const dayKey = steamDateKeyFromUtcMs(snapshot.capturedAtMs);
+    const previous = latestByDay.get(dayKey);
+    if (!previous || snapshot.capturedAtMs >= previous.capturedAtMs) {
+      latestByDay.set(dayKey, snapshot);
+    }
+  }
+  return Array.from(latestByDay.values()).sort((a, b) => a.capturedAtMs - b.capturedAtMs);
+}
+
+function buildStableDeltaMinutes(prevSnapshot, currSnapshot, nextSnapshot = null) {
+  const prevMap = prevSnapshot && typeof prevSnapshot.totalsMin === "object" ? prevSnapshot.totalsMin : {};
+  const currMap = currSnapshot && typeof currSnapshot.totalsMin === "object" ? currSnapshot.totalsMin : {};
+  const nextMap = nextSnapshot && typeof nextSnapshot.totalsMin === "object" ? nextSnapshot.totalsMin : null;
+  const keys = new Set([...Object.keys(prevMap), ...Object.keys(currMap), ...(nextMap ? Object.keys(nextMap) : [])]);
+  const result = {};
+
+  for (const key of keys) {
+    const start = Number(prevMap[key] || 0);
+    const current = Number(currMap[key] || 0);
+    let delta = current - start;
+    if (delta <= 0) continue;
+
+    if (nextMap) {
+      const nextValue = Number(nextMap[key] || 0);
+      if (nextValue < current) {
+        delta = Math.max(0, nextValue - start);
+      }
+    }
+
+    if (delta > 0) {
+      result[key] = delta;
+    }
+  }
+
+  return result;
+}
+
 function computeMonthTotalsFromSnapshots(snapshots, monthKey) {
-  const rows = normalizeSnapshots(snapshots);
+  const rows = collapseSnapshotsByDay(normalizeSnapshots(snapshots, { monotonic: false }));
   const monthStart = steamMonthStartUtcMs(monthKey);
   const nextMonthStart = steamMonthStartUtcMs(shiftMonth(monthKey, 1));
   if (monthStart === null || nextMonthStart === null) return {};
@@ -272,13 +317,14 @@ function computeMonthTotalsFromSnapshots(snapshots, monthKey) {
   for (let i = 1; i < rows.length; i += 1) {
     const prev = rows[i - 1];
     const curr = rows[i];
+    const next = rows[i + 1] || null;
     if (!prev || !curr) continue;
     if (curr.capturedAtMs <= prev.capturedAtMs) continue;
     const intervalMs = curr.capturedAtMs - prev.capturedAtMs;
     const monthOverlap = overlapMs(prev.capturedAtMs, curr.capturedAtMs, monthStart, nextMonthStart);
     if (monthOverlap <= 0) continue;
 
-    const deltaMap = buildPositiveDeltaMinutes(prev.totalsMin, curr.totalsMin);
+    const deltaMap = buildStableDeltaMinutes(prev, curr, next);
     for (const [appId, deltaMinutes] of Object.entries(deltaMap)) {
       const monthShare = (deltaMinutes * monthOverlap) / intervalMs;
       if (monthShare > 0) {
@@ -391,7 +437,7 @@ try {
         capturedAt: new Date(targetCapturedAtMs).toISOString(),
         totalsMin: totalsMap,
       },
-    ]);
+    ], { monotonic: false });
   }
 
   const afterSerialized = serializeSnapshotsForCompare(snapshots);
@@ -401,7 +447,7 @@ try {
       version: 2,
       timezone: STEAM_TIME_ZONE,
       updatedAt: new Date().toISOString(),
-      snapshots: normalizeSnapshots(snapshots).map((snapshot) => ({
+      snapshots: normalizeSnapshots(snapshots, { monotonic: false }).map((snapshot) => ({
         capturedAt: snapshot.capturedAt,
         totalsMin: snapshot.totalsMin,
       })),
