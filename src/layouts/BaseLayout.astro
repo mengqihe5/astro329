@@ -75,7 +75,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
           <nav class="nav">
             {
               navItems.map((item) => (
-                <a href={item.href} class:list={["nav-link", item.active && "active"]}>
+                <a href={item.href} class:list={["nav-link", item.active && "active"]} data-astro-prefetch="hover">
                   <svg class="icon">
                     <use href={`#icon-${item.icon}`}></use>
                   </svg>

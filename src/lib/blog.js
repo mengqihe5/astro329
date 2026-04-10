@@ -45,9 +45,13 @@ const STEAM_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
 const STEAM_DAY_MS = 24 * 60 * 60 * 1000;
 const STEAM_STRICT_GAP_SECONDS = 6 * 60 * 60;
 const STEAM_MAX_DISTRIBUTABLE_GAP_SECONDS = 48 * 60 * 60;
-const STEAM_FETCH_RETRY_TIMES = 3;
-const STEAM_FETCH_TIMEOUT_MS = 20_000;
+const STEAM_PAGE_FETCH_RETRY_TIMES = 0;
+const STEAM_PAGE_FETCH_TIMEOUT_MS = 3_500;
+const STEAM_SYNC_FETCH_RETRY_TIMES = 3;
+const STEAM_SYNC_FETCH_TIMEOUT_MS = 20_000;
 const steamOwnedGamesCache = new Map();
+let articleRowsCache = null;
+let bookRowsCache = null;
 
 const ARTICLE_COVER_BY_SLUG = {
   "django-blog-day-1": "/app01/article-covers/cover-django.svg",
@@ -308,34 +312,36 @@ function renderMarkdown(input) {
 
 export function loadArticles(order = "desc", options = {}) {
   const includeDraft = Boolean(options.includeDraft);
-  const rows = Object.entries(ARTICLE_FILES).map(([pathName, rawText]) => {
-    const slug = slugFromPath(pathName);
-    const { metadata, body } = parseFrontMatter(String(rawText || ""));
-    const title = String(metadata.title || "").trim() || slug.replace(/-/g, " ");
-    const date = normalizeArticleDate(metadata.date);
-    const tags = parseTags(metadata.tags);
-    const cover = resolveArticleCover(metadata.cover, slug);
-    const draft = parseDraft(metadata.draft);
+  if (!articleRowsCache) {
+    articleRowsCache = Object.entries(ARTICLE_FILES).map(([pathName, rawText]) => {
+      const slug = slugFromPath(pathName);
+      const { metadata, body } = parseFrontMatter(String(rawText || ""));
+      const title = String(metadata.title || "").trim() || slug.replace(/-/g, " ");
+      const date = normalizeArticleDate(metadata.date);
+      const tags = parseTags(metadata.tags);
+      const cover = resolveArticleCover(metadata.cover, slug);
+      const draft = parseDraft(metadata.draft);
 
-    if (!hasRequiredArticleFrontmatter(metadata)) {
-      console.warn(`[articles] missing frontmatter keys in ${slug}.md. Expected: ${ARTICLE_REQUIRED_KEYS.join(", ")}`);
-    }
+      if (!hasRequiredArticleFrontmatter(metadata)) {
+        console.warn(`[articles] missing frontmatter keys in ${slug}.md. Expected: ${ARTICLE_REQUIRED_KEYS.join(", ")}`);
+      }
 
-    return {
-      slug,
-      title,
-      date,
-      summary: buildSummary(metadata, body),
-      content: body,
-      contentHtml: renderMarkdown(body),
-      tags,
-      cover,
-      draft,
-      mtime: getMtime(pathName),
-    };
-  });
+      return {
+        slug,
+        title,
+        date,
+        summary: buildSummary(metadata, body),
+        content: body,
+        contentHtml: renderMarkdown(body),
+        tags,
+        cover,
+        draft,
+        mtime: getMtime(pathName),
+      };
+    });
+  }
 
-  const visibleRows = includeDraft ? rows : rows.filter((row) => !row.draft);
+  const visibleRows = (includeDraft ? articleRowsCache : articleRowsCache.filter((row) => !row.draft)).slice();
 
   const reverse = order !== "asc";
   visibleRows.sort((a, b) => {
@@ -347,29 +353,33 @@ export function loadArticles(order = "desc", options = {}) {
 }
 
 export function loadBooks(order = "desc") {
-  const rows = [];
-  for (const [pathName, rawText] of Object.entries(REVIEW_FILES)) {
-    const slug = slugFromPath(pathName);
-    if (slug.toLowerCase() === "readme") continue;
-    const { metadata, body } = parseFrontMatter(String(rawText || ""));
-    const monthRaw = metadata.month || "未知月份";
-    const bookTitle = metadata.title || slug.replace(/-/g, " ");
-    const parsedTags = parseTags(metadata.tags);
-    const coverInfo = findBookCover(slug, bookTitle, monthRaw);
-    rows.push({
-      slug,
-      title: bookTitle,
-      monthRaw,
-      monthLabel: formatMonthLabel(monthRaw),
-      cover: coverInfo.cover,
-      coverCandidates: coverInfo.coverCandidates,
-      coverFallback: coverInfo.coverFallback,
-      tags: parsedTags.length > 0 ? parsedTags : ["未分类"],
-      reviewText: body,
-      reviewHtml: renderMarkdown(body),
-    });
+  if (!bookRowsCache) {
+    const rows = [];
+    for (const [pathName, rawText] of Object.entries(REVIEW_FILES)) {
+      const slug = slugFromPath(pathName);
+      if (slug.toLowerCase() === "readme") continue;
+      const { metadata, body } = parseFrontMatter(String(rawText || ""));
+      const monthRaw = metadata.month || "未知月份";
+      const bookTitle = metadata.title || slug.replace(/-/g, " ");
+      const parsedTags = parseTags(metadata.tags);
+      const coverInfo = findBookCover(slug, bookTitle, monthRaw);
+      rows.push({
+        slug,
+        title: bookTitle,
+        monthRaw,
+        monthLabel: formatMonthLabel(monthRaw),
+        cover: coverInfo.cover,
+        coverCandidates: coverInfo.coverCandidates,
+        coverFallback: coverInfo.coverFallback,
+        tags: parsedTags.length > 0 ? parsedTags : ["未分类"],
+        reviewText: body,
+        reviewHtml: renderMarkdown(body),
+      });
+    }
+    bookRowsCache = rows;
   }
 
+  const rows = bookRowsCache.slice();
   rows.sort((a, b) => {
     const delta = String(a.monthRaw).localeCompare(String(b.monthRaw));
     return order === "asc" ? delta : -delta;
@@ -1156,18 +1166,24 @@ function withRatio(games, sortMode, selectedMonth, sources = null, currentTotals
   return rows;
 }
 
-async function fetchSteamOwnedCards(apiKey, steamId) {
+async function fetchSteamOwnedCards(apiKey, steamId, options = {}) {
   const endpoint = new URL("https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/");
   endpoint.searchParams.set("key", apiKey);
   endpoint.searchParams.set("steamid", steamId);
   endpoint.searchParams.set("include_appinfo", "1");
   endpoint.searchParams.set("include_played_free_games", "1");
   endpoint.searchParams.set("format", "json");
+  const retryTimes = Number.isFinite(Number(options.retryTimes))
+    ? Math.max(0, Math.floor(Number(options.retryTimes)))
+    : STEAM_PAGE_FETCH_RETRY_TIMES;
+  const timeoutMs = Number.isFinite(Number(options.timeoutMs))
+    ? Math.max(500, Math.floor(Number(options.timeoutMs)))
+    : STEAM_PAGE_FETCH_TIMEOUT_MS;
   let payload = null;
   let lastError = null;
-  for (let attempt = 0; attempt <= STEAM_FETCH_RETRY_TIMES; attempt += 1) {
+  for (let attempt = 0; attempt <= retryTimes; attempt += 1) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), STEAM_FETCH_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetch(endpoint, { method: "GET", signal: controller.signal });
       if (!response.ok) {
@@ -1178,7 +1194,7 @@ async function fetchSteamOwnedCards(apiKey, steamId) {
       break;
     } catch (error) {
       lastError = error;
-      if (attempt < STEAM_FETCH_RETRY_TIMES) {
+      if (attempt < retryTimes) {
         const delayMs = 600 * (attempt + 1);
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
@@ -1212,8 +1228,9 @@ async function fetchSteamOwnedCards(apiKey, steamId) {
   });
 }
 
-export async function fetchSteamGames(sortBy, monthKey) {
+export async function fetchSteamGames(sortBy, monthKey, options = {}) {
   const sortMode = sortBy === "total" ? "total" : "month";
+  const fastMode = Boolean(options.fastMode);
   const apiKey = String(import.meta.env.STEAM_API_KEY || "").trim();
   const steamId = String(import.meta.env.STEAM_ID || "").trim();
   const archiveSources = loadSteamSources();
@@ -1228,6 +1245,13 @@ export async function fetchSteamGames(sortBy, monthKey) {
   const nowTs = Date.now();
   const cacheKey = steamId;
   const cachedEntry = steamOwnedGamesCache.get(cacheKey);
+  if (fastMode && cachedEntry && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
+    const currentTotalsMap = buildTotalsMapFromGames(cachedEntry.cards);
+    return {
+      games: withRatio(cachedEntry.cards, sortMode, monthKey, archiveSources, currentTotalsMap),
+      notice: "已加载 Steam 本地缓存数据。",
+    };
+  }
   if (cachedEntry && cachedEntry.expiresAt > nowTs && Array.isArray(cachedEntry.cards) && cachedEntry.cards.length > 0) {
     const currentTotalsMap = buildTotalsMapFromGames(cachedEntry.cards);
     return {
@@ -1237,7 +1261,10 @@ export async function fetchSteamGames(sortBy, monthKey) {
   }
 
   try {
-    const cards = await fetchSteamOwnedCards(apiKey, steamId);
+    const cards = await fetchSteamOwnedCards(apiKey, steamId, {
+      retryTimes: STEAM_PAGE_FETCH_RETRY_TIMES,
+      timeoutMs: STEAM_PAGE_FETCH_TIMEOUT_MS,
+    });
     if (!cards.length) {
       return { games: [], notice: "未从 Steam API 获取到游戏数据。" };
     }
@@ -1276,7 +1303,10 @@ export async function syncSteamSnapshots(options = {}) {
     throw new Error("STEAM_API_KEY and STEAM_ID are required");
   }
 
-  const cards = await fetchSteamOwnedCards(apiKey, steamId);
+  const cards = await fetchSteamOwnedCards(apiKey, steamId, {
+    retryTimes: STEAM_SYNC_FETCH_RETRY_TIMES,
+    timeoutMs: STEAM_SYNC_FETCH_TIMEOUT_MS,
+  });
   if (!cards.length) {
     return {
       ok: false,
@@ -1409,11 +1439,12 @@ export function mergeGameFreeChartRows(chartRows) {
 
 export async function buildDashboardData(monthParam, dayParam) {
   const { minMonth, maxMonth } = getMonthBounds();
+  const selectedMonth = resolveMonth(monthParam, minMonth, maxMonth);
+  const steamPromise = fetchSteamGames("month", selectedMonth, { fastMode: true });
   const allArticles = loadArticles("desc");
   const allBooks = loadBooks("desc");
-  const selectedMonth = resolveMonth(monthParam, minMonth, maxMonth);
   const steamSources = loadSteamSources();
-  const steamResult = await fetchSteamGames("month", selectedMonth);
+  const steamResult = await steamPromise;
 
   const monthArticles = allArticles.filter((item) => item.date.startsWith(selectedMonth));
   const monthBooks = allBooks.filter((item) => item.monthRaw === selectedMonth);
