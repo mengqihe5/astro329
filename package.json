@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "npm run content:check && astro build && npm run search:index",
-    "preview": "astro preview",
+    "preview": "npm run build && wrangler dev",
     "new:article": "node scripts/new-article.mjs",
     "books:covers": "node scripts/fetch-book-covers.mjs",
     "books:covers:force": "node scripts/fetch-book-covers.mjs --force",
@@ -14,15 +14,19 @@
     "content:fix": "node scripts/validate-articles.mjs --fix",
     "steam:snapshot": "node scripts/sync-steam-snapshot.mjs",
     "images:optimize": "node scripts/optimize-images.mjs",
-    "search:index": "pagefind --site dist --output-path dist"
+    "search:index": "pagefind --site dist --output-path dist",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "12",
     "@astrojs/netlify": "^6.5.0",
     "astro": "^5.6.1",
     "marked": "^17.0.6",
     "sharp": "^0.34.4"
   },
   "devDependencies": {
-    "pagefind": "^1.4.0"
+    "pagefind": "^1.4.0",
+    "wrangler": "^4.81.1"
   }
 }
