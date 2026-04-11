@@ -19,94 +19,96 @@ const games = steamResult.games;
   description={`${monthButtonLabel} 的 Steam 游戏时长与总时长统计。`}
   currentPath={Astro.url.pathname}
 >
-  <section class="page-head page-head-row">
-    <div>
-      <h2>游戏记录（Steam）</h2>
-      <div class="page-note-spacer"></div>
-    </div>
-    <div class="steam-control-group">
-      <div class="mode-switch">
-        <details
-          class:list={["month-dropdown", "steam-month-dropdown", sortBy === "month" && "active"]}
-          data-month-dropdown
-          data-arrow-only="true"
-          data-month-mode={sortBy}
-          data-switch-url={switchToMonthUrl}
-          data-month-min={minMonth}
-          data-month-max={maxMonth}
-        >
-          <summary class:list={["switch-link", "month-switch-trigger", sortBy === "month" && "active"]}>
-            {
-              sortBy === "month" ? (
-                <span class="month-dropdown-label" data-month-label>{monthButtonLabel}</span>
-              ) : (
-                <a href={switchToMonthUrl} class="month-dropdown-label month-switch-link" data-month-label>{monthButtonLabel}</a>
-              )
-            }
-            <span class="month-dropdown-arrow" data-month-arrow>▾</span>
-          </summary>
-          <form method="get" class="month-dropdown-panel" data-month-form>
-            <input type="hidden" name="sort" value="month" />
-            <input type="hidden" name="month" value={selectedMonth} data-month-input />
-            <div class="month-option-list" data-month-list>
-              {
-                monthOptions.map((option) => (
-                  <a
-                    href={`/steam/?sort=month&month=${option.value}`}
-                    class:list={["month-option", option.value === selectedMonth && "selected"]}
-                    data-month-value={option.value}
-                  >
-                    {option.compact}
-                  </a>
-                ))
-              }
-            </div>
-          </form>
-        </details>
-        <a href={`/steam/?sort=total&month=${selectedMonth}`} class:list={["switch-link", sortBy === "total" && "active"]}>总时长</a>
+  <div class="steam-page-shell">
+    <section class="page-head page-head-row">
+      <div>
+        <h2>游戏记录（Steam）</h2>
+        <div class="page-note-spacer"></div>
       </div>
-    </div>
-  </section>
-
-  <section class="card-grid steam-grid">
-    {
-      games.length > 0 ? (
-        games.map((game) => (
-          <article class="card">
-            <div class="card-media game-media">
+      <div class="steam-control-group">
+        <div class="mode-switch">
+          <details
+            class:list={["month-dropdown", "steam-month-dropdown", sortBy === "month" && "active"]}
+            data-month-dropdown
+            data-arrow-only="true"
+            data-month-mode={sortBy}
+            data-switch-url={switchToMonthUrl}
+            data-month-min={minMonth}
+            data-month-max={maxMonth}
+          >
+            <summary class:list={["switch-link", "month-switch-trigger", sortBy === "month" && "active"]}>
               {
-                game.coverUrl ? (
-                  <img src={game.coverUrl} alt={`${game.name} 封面`} loading="lazy" decoding="async" fetchpriority="low" />
+                sortBy === "month" ? (
+                  <span class="month-dropdown-label" data-month-label>{monthButtonLabel}</span>
                 ) : (
-                  <span>Steam</span>
+                  <a href={switchToMonthUrl} class="month-dropdown-label month-switch-link" data-month-label>{monthButtonLabel}</a>
                 )
               }
-            </div>
-            <div class="card-body">
-              <h3>{game.name}</h3>
-              <div class="progress-head meta">
-                <span class="time-pair">
-                  <span class="time-label">本月：</span>
-                  <span class="time-value">{game.monthHours}</span>
-                  <span class="time-unit">h</span>
-                </span>
-                <span class="time-pair">
-                  <span class="time-label">总时长：</span>
-                  <span class="time-value">{game.playtimeHours}</span>
-                  <span class="time-unit">h</span>
-                </span>
+              <span class="month-dropdown-arrow" data-month-arrow>▾</span>
+            </summary>
+            <form method="get" class="month-dropdown-panel" data-month-form>
+              <input type="hidden" name="sort" value="month" />
+              <input type="hidden" name="month" value={selectedMonth} data-month-input />
+              <div class="month-option-list" data-month-list>
+                {
+                  monthOptions.map((option) => (
+                    <a
+                      href={`/steam/?sort=month&month=${option.value}`}
+                      class:list={["month-option", option.value === selectedMonth && "selected"]}
+                      data-month-value={option.value}
+                    >
+                      {option.compact}
+                    </a>
+                  ))
+                }
               </div>
-              <div class="playtime-track">
-                <div class="playtime-fill" style={`width: ${game.ratio}%;`}></div>
+            </form>
+          </details>
+          <a href={`/steam/?sort=total&month=${selectedMonth}`} class:list={["switch-link", sortBy === "total" && "active"]}>总时长</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="card-grid steam-grid">
+      {
+        games.length > 0 ? (
+          games.map((game) => (
+            <article class="card">
+              <div class="card-media game-media">
+                {
+                  game.coverUrl ? (
+                    <img src={game.coverUrl} alt={`${game.name} 封面`} loading="lazy" decoding="async" fetchpriority="low" />
+                  ) : (
+                    <span>Steam</span>
+                  )
+                }
               </div>
-            </div>
+              <div class="card-body">
+                <h3>{game.name}</h3>
+                <div class="progress-head meta">
+                  <span class="time-pair">
+                    <span class="time-label">本月：</span>
+                    <span class="time-value">{game.monthHours}</span>
+                    <span class="time-unit">h</span>
+                  </span>
+                  <span class="time-pair">
+                    <span class="time-label">总时长：</span>
+                    <span class="time-value">{game.playtimeHours}</span>
+                    <span class="time-unit">h</span>
+                  </span>
+                </div>
+                <div class="playtime-track">
+                  <div class="playtime-fill" style={`width: ${game.ratio}%;`}></div>
+                </div>
+              </div>
+            </article>
+          ))
+        ) : (
+          <article class="card">
+            <p>当前没有可显示的游戏数据。</p>
           </article>
-        ))
-      ) : (
-        <article class="card">
-          <p>当前没有可显示的游戏数据。</p>
-        </article>
-      )
-    }
-  </section>
+        )
+      }
+    </section>
+  </div>
 </BaseLayout>

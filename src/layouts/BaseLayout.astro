@@ -3,8 +3,8 @@ import { ViewTransitions } from "astro:transitions";
 import { SITE_PROFILE, getNavItems } from "../lib/blog.js";
 
 const {
-  title = "Micah Hale | ¼ÇÂ¼²©¿Í",
-  description = "Micah Hale µÄĞ´×÷¡¢ÓÎÏ·ÓëÔÄ¶Á¼ÇÂ¼¡£",
+  title = "Micah Hale | è®°å½•åšå®¢",
+  description = "Micah Hale çš„å†™ä½œã€æ¸¸æˆä¸é˜…è¯»è®°å½•ã€‚",
   currentPath = "/",
   ogImage = "/app01/avatar.jpg",
   ogType = "website",
@@ -31,7 +31,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
     <meta name="theme-color" content="#0d1735" />
     <link rel="canonical" href={canonicalUrl} />
     <meta property="og:locale" content="zh_CN" />
-    <meta property="og:site_name" content={`${SITE_PROFILE.nickname} µÄ²©¿Í`} />
+    <meta property="og:site_name" content={`${SITE_PROFILE.nickname} çš„åšå®¢`} />
     <meta property="og:type" content={ogType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -41,9 +41,22 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
+    <link rel="preload" as="image" href="/app01/backgrounds/site-bg.png" fetchpriority="high" />
     <link rel="stylesheet" href="/app01/style.css" />
   </head>
-  <body data-theme="light">
+  <body>
+    <video
+      class="site-bg-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="/app01/backgrounds/site-bg.png"
+      aria-hidden="true"
+    >
+      <source src="/app01/backgrounds/æ°´æ± å€’å½±-æ°´æ³¢çº¹.mp4" type="video/mp4" />
+    </video>
     <svg width="0" height="0" style="position:absolute">
       <symbol id="icon-home" viewBox="0 0 24 24">
         <path d="M12 3.5 3 11v9a1 1 0 0 0 1 1h5v-6h6v6h5a1 1 0 0 0 1-1v-9l-9-7.5Z" />
@@ -57,25 +70,19 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
       <symbol id="icon-article" viewBox="0 0 24 24">
         <path d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm2 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z" />
       </symbol>
-      <symbol id="icon-sun" viewBox="0 0 24 24">
-        <path d="M12 6.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11Zm0-4v2.2m0 14.6v2.2M4.8 4.8l1.6 1.6m11.2 11.2 1.6 1.6m0-14.4-1.6 1.6M6.4 17.6l-1.6 1.6M2.5 12h2.2m14.6 0h2.2" />
-      </symbol>
-      <symbol id="icon-moon" viewBox="0 0 24 24">
-        <path d="M14.6 3.2a8.9 8.9 0 1 0 6.2 13.5 8.3 8.3 0 0 1-4.7 1.4A8.6 8.6 0 0 1 7.5 9a8.3 8.3 0 0 1 1.4-4.7 8.9 8.9 0 0 0 5.7-1.1Z" />
-      </symbol>
     </svg>
 
     <div class="layout">
       <aside class="sidebar">
         <div class="sidebar-main">
           <div class="profile">
-            <img class="avatar avatar-image" src="/app01/avatar.jpg" alt="Micah Hale avatar" />
+            <img class="avatar avatar-image" src="/app01/avatar.jpg" alt="Micah Hale avatar" width="50" height="50" loading="eager" fetchpriority="high" />
             <h1 class="nickname">{SITE_PROFILE.nickname}</h1>
           </div>
           <nav class="nav">
             {
               navItems.map((item) => (
-                <a href={item.href} class:list={["nav-link", item.active && "active"]} data-astro-prefetch="hover">
+                <a href={item.href} class:list={["nav-link", item.active && "active"]} aria-current={item.active ? "page" : undefined} data-astro-prefetch="hover">
                   <svg class="icon">
                     <use href={`#icon-${item.icon}`}></use>
                   </svg>
@@ -84,16 +91,6 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
               ))
             }
           </nav>
-        </div>
-        <div class="sidebar-bottom">
-          <button id="themeToggle" class="icon-button" type="button" aria-label="ÇĞ»»Íâ¹Û">
-            <svg class="icon icon-sun">
-              <use href="#icon-sun"></use>
-            </svg>
-            <svg class="icon icon-moon">
-              <use href="#icon-moon"></use>
-            </svg>
-          </button>
         </div>
       </aside>
 

@@ -1,5 +1,4 @@
-﻿import { initThemeToggle } from "./modules/theme.js";
-import { initKpiCounters } from "./modules/counters.js";
+﻿import { initKpiCounters } from "./modules/counters.js";
 import { initMutuallyExclusiveDetails } from "./modules/dropdowns.js";
 import { initMonthDropdowns } from "./modules/month-dropdown.js";
 import { initDashboardDayArticles } from "./modules/day-article-panel.js";
@@ -24,7 +23,6 @@ const initPage = function () {
   }
   lastInitUrl = currentUrl;
 
-  runSafe(initThemeToggle);
   runSafe(initScrollStability);
   runSafe(initTouchScrollClickGuard);
   runSafe(initSamePageLinkGuard);

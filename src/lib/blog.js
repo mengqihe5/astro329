@@ -1,4 +1,4 @@
-﻿import { fileURLToPath } from "node:url";
+import { fileURLToPath } from "node:url";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { marked } from "marked";
 
@@ -1531,18 +1531,19 @@ export function escapeHtml(input) {
 export function renderDayArticlePanel(selectedDayLabel, calendarArticles) {
   const titleHtml = `<h4>${escapeHtml(selectedDayLabel)}</h4>`;
   if (!calendarArticles.length) {
-    return `${titleHtml}<div class="day-article-grid"><p class="meta">No articles on this date.</p></div>`;
+    return `${titleHtml}<div class="day-article-grid"><p class="meta">该日期暂无文章。</p></div>`;
   }
 
   const cards = calendarArticles
     .map((article) => {
       const slug = encodeURIComponent(article.slug);
-      return `<a href="/articles/${slug}/" class="card card-link day-article-card"><div class="day-article-thumb"><img src="${escapeHtml(article.cover)}" alt="${escapeHtml(article.title)} cover" loading="lazy" decoding="async" fetchpriority="low"></div><div class="day-article-content"><h3>${escapeHtml(article.title)}</h3></div></a>`;
+      return `<a href="/articles/${slug}/" class="card card-link day-article-card"><div class="day-article-thumb"><img src="${escapeHtml(article.cover)}" alt="${escapeHtml(article.title)} 封面" loading="lazy" decoding="async" fetchpriority="low"></div><div class="day-article-content"><h3>${escapeHtml(article.title)}</h3></div></a>`;
     })
     .join("");
 
   return `${titleHtml}<div class="day-article-grid">${cards}</div>`;
 }
+
 
 
 

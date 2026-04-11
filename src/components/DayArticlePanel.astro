@@ -1,4 +1,4 @@
-﻿---
+---
 const { selectedDayLabel, calendarArticles } = Astro.props;
 ---
 <h4>{selectedDayLabel}</h4>
@@ -10,7 +10,7 @@ const { selectedDayLabel, calendarArticles } = Astro.props;
           <div class="day-article-thumb">
             <img
               src={article.cover}
-              alt={`${article.title} cover`}
+              alt={`${article.title} 封面`}
               loading="lazy"
               decoding="async"
               fetchpriority="low"
@@ -22,7 +22,7 @@ const { selectedDayLabel, calendarArticles } = Astro.props;
         </a>
       ))
     ) : (
-      <p class="meta">No articles on this date.</p>
+      <p class="meta">该日期暂无文章。</p>
     )
   }
 </div>
