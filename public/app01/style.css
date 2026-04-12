@@ -91,7 +91,7 @@ body::after {
 
 body::before {
     z-index: 0;
-    background: url("backgrounds/site-bg.png") center / cover no-repeat;
+    background: transparent;
 }
 
 .site-bg-video {
@@ -270,12 +270,17 @@ body[data-theme="dark"] .icon-moon {
 
 .content {
     margin-left: var(--sidebar-width);
-    padding: 28px 24px;
+    padding: 28px calc(24px + var(--sidebar-width)) 28px 24px;
 }
 
-.steam-page-shell,
+.steam-page-shell {
+    padding-inline: 0;
+}
+
 .books-page-shell {
-    padding-inline: 100px;
+    width: min(100%, 1400px);
+    margin-inline: auto;
+    padding-inline: clamp(14px, 2.2vw, 36px);
 }
 
 .page-head h2 {
@@ -289,6 +294,22 @@ body[data-theme="dark"] .icon-moon {
     align-items: flex-start;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+.books-page-head,
+.steam-page-head {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.books-page-head .mode-switch-wrap,
+.steam-page-head .steam-control-group {
+    justify-content: flex-end;
+    width: 100%;
 }
 
 .page-note-spacer {
@@ -592,7 +613,7 @@ body[data-theme="dark"] .icon-moon {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     row-gap: 10px;
     column-gap: 18px;
-    padding-right: 72px;
+    padding-right: 0;
 }
 
 .steam-grid {
@@ -620,9 +641,10 @@ body[data-theme="dark"] .icon-moon {
     margin-bottom: 6px;
     font-size: 15px;
     line-height: 1.2;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .steam-grid .card-body {
@@ -635,7 +657,9 @@ body[data-theme="dark"] .icon-moon {
 
 .steam-grid .progress-head {
     font-size: 12px;
-    gap: 6px;
+    gap: 120px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 .steam-grid .playtime-track {
@@ -838,15 +862,17 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .articles-layout {
+    --articles-side-width: 280px;
     margin-top: 12px;
-    margin-left: 22px;
+    margin-left: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(224px, 19.2vw, 336px);
+    grid-template-columns: var(--articles-side-width) minmax(0, 1fr) var(--articles-side-width);
     gap: 34px;
     align-items: start;
 }
 
 .articles-main {
+    grid-column: 2;
     min-width: 0;
     padding-right: 0;
     display: flex;
@@ -857,15 +883,14 @@ body[data-theme="dark"] .icon-moon {
 .article-page-head,
 .article-strip-list,
 .article-empty-card {
-    width: min(100%, 1260px);
+    width: min(100%, 1320px);
 }
 
 .article-strip-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-content: center;
-    row-gap: 14px;
-    column-gap: 24px;
+    row-gap: 20px;
+    column-gap: 32px;
 }
 
 .article-strip-card {
@@ -981,7 +1006,12 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .articles-side-drawer {
+    grid-column: 3;
+    width: calc(var(--articles-side-width) - 18px);
+    justify-self: end;
     min-width: 0;
+    margin-top: 92px;
+    transform: translateX(calc(var(--sidebar-width) - 24px));
 }
 
 .articles-side-drawer > summary {
@@ -997,10 +1027,10 @@ body[data-theme="dark"] .icon-moon {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    position: fixed;
+    position: sticky;
     top: 124px;
-    right: 24px;
-    width: clamp(224px, 19.2vw, 336px);
+    right: auto;
+    width: 100%;
     align-self: start;
 }
 
@@ -1019,6 +1049,7 @@ body[data-theme="dark"] .icon-moon {
 }
 
 .article-side-title {
+    text-align: center;
     margin: 0 0 10px;
     font-size: 22px;
     line-height: 1;
@@ -1237,7 +1268,7 @@ body[data-theme="dark"] .icon-moon {
     border: none;
     border-radius: 0;
     padding: 0;
-    margin-inline: clamp(10px, 3.2vw, 80px);
+    margin-inline: 0;
     color: #e9f0ff;
     box-shadow: none;
     animation: dash-fade-in 0.65s ease-out;
@@ -2195,9 +2226,8 @@ body[data-theme="dark"] .icon-moon {
 }
 
 @media (max-width: 1600px) {
-    .steam-page-shell,
-    .books-page-shell {
-        padding-inline: clamp(36px, 4.8vw, 88px);
+    .steam-page-shell {
+        padding-inline: 0;
     }
 
     .steam-grid {
@@ -2206,9 +2236,8 @@ body[data-theme="dark"] .icon-moon {
 }
 
 @media (max-width: 1200px) {
-    .steam-page-shell,
-    .books-page-shell {
-        padding-inline: clamp(22px, 3.5vw, 48px);
+    .steam-page-shell {
+        padding-inline: 0;
     }
 
     .steam-grid {
@@ -2251,13 +2280,18 @@ body[data-theme="dark"] .icon-moon {
     }
 
     .articles-layout {
-        grid-template-columns: minmax(0, 1fr) clamp(200px, 24vw, 272px);
+        --articles-side-width: 220px;
+        grid-template-columns: var(--articles-side-width) minmax(0, 1fr) var(--articles-side-width);
         gap: 14px;
-        margin-left: 12px;
+        margin-left: 0;
     }
 
     .articles-side {
-        width: clamp(200px, 24vw, 272px);
+        width: 100%;
+    }
+
+    .articles-side-drawer {
+        margin-top: 82px;
     }
 
     .article-strip-content h3 {
@@ -2276,7 +2310,7 @@ body[data-theme="dark"] .icon-moon {
     }
 
     .content {
-        padding: 20px 14px 24px;
+        padding: 20px calc(14px + var(--sidebar-width)) 24px 14px;
     }
 
     .dash-kpi-grid {
@@ -2288,7 +2322,43 @@ body[data-theme="dark"] .icon-moon {
     }
 
     .steam-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
+    }
+
+    .article-strip-list {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+        row-gap: 18px;
+    }
+}
+
+@media (max-width: 900px) and (min-width: 761px) {
+    .steam-grid .card {
+        grid-template-columns: minmax(200px, 42%) 1fr;
+    }
+
+    .game-media {
+        aspect-ratio: auto;
+        min-height: 132px;
+    }
+}
+
+@media (max-width: 760px) {
+    .steam-grid .card {
+        grid-template-columns: 1fr;
+    }
+
+    .game-media {
+        aspect-ratio: 2.2 / 1;
+        min-height: 0;
+    }
+}
+
+@media (max-width: 900px) {
+    .article-strip-list {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+        row-gap: 14px;
     }
 }
 
@@ -2402,15 +2472,6 @@ body[data-theme="dark"] .icon-moon {
         gap: 10px;
     }
 
-    .steam-grid .card {
-        grid-template-columns: 1fr;
-    }
-
-    .game-media {
-        aspect-ratio: 2.2 / 1;
-        min-height: 0;
-    }
-
     .month-picker-form {
         width: 100%;
         justify-content: space-between;
@@ -2466,9 +2527,11 @@ body[data-theme="dark"] .icon-moon {
     .articles-layout {
         grid-template-columns: 1fr;
         margin-left: 0;
+        padding-right: 0;
     }
 
     .articles-main {
+        grid-column: auto;
         align-items: stretch;
     }
 
@@ -2479,7 +2542,12 @@ body[data-theme="dark"] .icon-moon {
     }
 
     .articles-side-drawer {
+        grid-column: auto;
         order: -1;
+        width: auto;
+        justify-self: stretch;
+        margin-top: 0;
+        transform: none;
     }
 
     .articles-side-drawer > summary {
@@ -2510,7 +2578,6 @@ body[data-theme="dark"] .icon-moon {
     }
 
     .article-strip-list {
-        grid-template-columns: 1fr;
         column-gap: 0;
     }
 
@@ -2799,7 +2866,7 @@ body[data-theme="dark"] .icon-moon {
 
     .content {
         margin-left: var(--sidebar-width);
-        padding: 28px 24px;
+        padding: 28px calc(24px + var(--sidebar-width)) 28px 24px;
     }
 
     .dash-kpi-grid {

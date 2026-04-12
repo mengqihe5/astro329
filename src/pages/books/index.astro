@@ -32,11 +32,8 @@ if (mode === "tag") {
   currentPath={Astro.url.pathname}
 >
   <div class="books-page-shell">
-    <section class="page-head page-head-row">
-      <div>
-        <h2>书架</h2>
-        <div class="page-note-spacer"></div>
-      </div>
+    <section class="page-head books-page-head">
+      <h2>书架</h2>
       <div class="mode-switch-wrap">
         <div class="mode-switch">
           <a href="/books/?mode=all" class:list={["switch-link", mode === "all" && "active"]}>全部</a>

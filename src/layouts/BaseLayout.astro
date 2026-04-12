@@ -41,21 +41,22 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
-    <link rel="preload" as="image" href="/app01/backgrounds/site-bg.png" fetchpriority="high" />
+    <link rel="preload" as="video" href="/app01/backgrounds/水边倒影-水波纹.mp4" type="video/mp4" />
     <link rel="stylesheet" href="/app01/style.css" />
   </head>
   <body>
     <video
       class="site-bg-video"
+      transition:name="site-bg-video"
+      transition:persist
       autoplay
       muted
       loop
       playsinline
-      preload="metadata"
-      poster="/app01/backgrounds/site-bg.png"
+      preload="auto"
       aria-hidden="true"
     >
-      <source src="/app01/backgrounds/水池倒影-水波纹.mp4" type="video/mp4" />
+      <source src="/app01/backgrounds/水边倒影-水波纹.mp4" type="video/mp4" />
     </video>
     <svg width="0" height="0" style="position:absolute">
       <symbol id="icon-home" viewBox="0 0 24 24">

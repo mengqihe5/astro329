@@ -3,8 +3,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadArticles } from "../../lib/blog.js";
 
 const params = Astro.url.searchParams;
-const queryRaw = (params.get("q") || "").trim();
-const queryLower = queryRaw.toLowerCase();
 
 const allArticles = loadArticles("desc");
 const allTags = [...new Set(allArticles.flatMap((article) => article.tags || []))].sort((a, b) => a.localeCompare(b));
@@ -30,18 +28,14 @@ const tagCounts = allTags.map((tag) => ({
 const filteredArticles = allArticles.filter((article) => {
   const yearMatch = selectedYear === "all" || String(article.date).startsWith(`${selectedYear}-`);
   const tagMatch = selectedTag === "all" || (article.tags || []).includes(selectedTag);
-  const searchText = `${article.title} ${(article.tags || []).join(" ")} ${article.content || ""}`.toLowerCase();
-  const queryMatch = !queryLower || searchText.includes(queryLower);
-  return yearMatch && tagMatch && queryMatch;
+  return yearMatch && tagMatch;
 });
 
 function toArticlesUrl(next) {
   const nextParams = new URLSearchParams();
-  const qValue = typeof next.q === "string" ? next.q : queryRaw;
   const yearValue = typeof next.year === "string" ? next.year : selectedYear;
   const tagValue = typeof next.tag === "string" ? next.tag : selectedTag;
 
-  if (qValue) nextParams.set("q", qValue);
   if (yearValue && yearValue !== "all") nextParams.set("year", yearValue);
   if (tagValue && tagValue !== "all") nextParams.set("tag", tagValue);
 
@@ -51,7 +45,7 @@ function toArticlesUrl(next) {
 ---
 <BaseLayout
   title="文章 | Micah Hale"
-  description={`共 ${filteredArticles.length} 篇文章，支持搜索、时间归档与标签归档。`}
+  description={`共 ${filteredArticles.length} 篇文章，支持时间归档与标签归档。`}
   currentPath={Astro.url.pathname}
 >
   <section class="articles-layout">
@@ -93,22 +87,6 @@ function toArticlesUrl(next) {
     <details class="articles-side-drawer" open>
       <summary class="articles-side-toggle">筛选与归档</summary>
       <aside class="articles-side">
-        <section class="card article-side-block article-side-search">
-          <h3 class="article-side-title">搜索</h3>
-          <form class="article-search-form" method="get" action="/articles/">
-            {selectedYear !== "all" && <input type="hidden" name="year" value={selectedYear} />}
-            {selectedTag !== "all" && <input type="hidden" name="tag" value={selectedTag} />}
-            <div class="article-search-row">
-              <input type="text" name="q" value={queryRaw} placeholder="输入关键词..." />
-              <button type="submit" aria-label="搜索">
-                <svg class="search-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M10.5 3.75a6.75 6.75 0 1 0 4.2 12.03l4.76 4.76a.75.75 0 1 0 1.06-1.06l-4.76-4.76A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z"></path>
-                </svg>
-              </button>
-            </div>
-          </form>
-        </section>
-
         <section class="card article-side-block">
           <h3 class="article-side-title">∞ 时间归档</h3>
           <div class="article-side-list">
