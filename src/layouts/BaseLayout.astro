@@ -22,7 +22,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
 <!DOCTYPE html>
 <html lang="zh-Hans">
   <head>
-    <ViewTransitions />
+    <ViewTransitions fallback="swap" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
@@ -58,6 +58,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
     >
       <source src="/app01/backgrounds/水边倒影-水波纹.mp4" type="video/mp4" />
     </video>
+    <div class="site-bg-overlay" transition:name="site-bg-overlay" transition:persist aria-hidden="true"></div>
     <svg width="0" height="0" style="position:absolute">
       <symbol id="icon-home" viewBox="0 0 24 24">
         <path d="M12 3.5 3 11v9a1 1 0 0 0 1 1h5v-6h6v6h5a1 1 0 0 0 1-1v-9l-9-7.5Z" />
@@ -74,7 +75,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
     </svg>
 
     <div class="layout">
-      <aside class="sidebar">
+      <aside class="sidebar" transition:name="site-sidebar" transition:persist>
         <div class="sidebar-main">
           <div class="profile">
             <img class="avatar avatar-image" src="/app01/avatar.jpg" alt="Micah Hale avatar" width="50" height="50" loading="eager" fetchpriority="high" />
@@ -83,7 +84,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
           <nav class="nav">
             {
               navItems.map((item) => (
-                <a href={item.href} class:list={["nav-link", item.active && "active"]} aria-current={item.active ? "page" : undefined} data-astro-prefetch="hover">
+                <a href={item.href} class:list={["nav-link", item.active && "active"]} aria-current={item.active ? "page" : undefined} data-astro-prefetch="viewport">
                   <svg class="icon">
                     <use href={`#icon-${item.icon}`}></use>
                   </svg>
@@ -95,7 +96,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
         </div>
       </aside>
 
-      <main class="content">
+      <main class="content" transition:name="page-content">
         <slot />
       </main>
     </div>

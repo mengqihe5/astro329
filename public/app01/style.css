@@ -5,6 +5,28 @@
     --font-title: var(--font-main);
 }
 
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none !important;
+}
+
+::view-transition-group(page-content) {
+    animation: none !important;
+}
+
+::view-transition-old(page-content) {
+    animation: none !important;
+}
+
+::view-transition-new(page-content) {
+    animation: none !important;
+}
+
+[data-astro-transition-scope] {
+    animation: none !important;
+}
+
 body {
     --text-main: #f2f5ff;
     --text-sub: #cad2e2;
@@ -81,19 +103,6 @@ body[data-theme="dark"] {
     min-height: 100svh;
 }
 
-body::before,
-body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-}
-
-body::before {
-    z-index: 0;
-    background: transparent;
-}
-
 .site-bg-video {
     position: fixed;
     inset: 0;
@@ -106,8 +115,11 @@ body::before {
     filter: saturate(1.08);
 }
 
-body::after {
+.site-bg-overlay {
+    position: fixed;
+    inset: 0;
     z-index: 1;
+    pointer-events: none;
     background:
         radial-gradient(1200px 760px at -8% -22%, rgba(124, 177, 255, 0.22), transparent 60%),
         radial-gradient(760px 520px at 110% 12%, rgba(255, 199, 114, 0.19), transparent 58%),
@@ -995,14 +1007,6 @@ body[data-theme="dark"] .icon-moon {
 
 .article-empty-card {
     padding: 22px 20px;
-}
-
-.article-strip-card,
-.day-article-card,
-.steam-grid .card,
-.books-grid .book-card {
-    content-visibility: auto;
-    contain-intrinsic-size: 280px;
 }
 
 .articles-side-drawer {
@@ -2211,6 +2215,15 @@ body[data-theme="dark"] .icon-moon {
 
 
 @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(root),
+    ::view-transition-old(root),
+    ::view-transition-new(root),
+    ::view-transition-group(page-content),
+    ::view-transition-old(page-content),
+    ::view-transition-new(page-content) {
+        animation: none !important;
+    }
+
     .site-bg-video {
         display: none;
     }
