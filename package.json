@@ -14,7 +14,7 @@
     "content:fix": "node scripts/validate-articles.mjs --fix",
     "steam:snapshot": "node scripts/sync-steam-snapshot.mjs",
     "images:optimize": "node scripts/optimize-images.mjs",
-    "search:index": "pagefind --site dist --output-path dist"
+    "search:index": "pagefind --site dist --output-path dist --root-selector \"[data-pagefind-body]\""
   },
   "dependencies": {
     "@astrojs/netlify": "^6.5.0",
