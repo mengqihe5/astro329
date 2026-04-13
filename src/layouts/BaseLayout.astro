@@ -19,10 +19,19 @@ const baseUrl =
 const canonicalUrl = new URL(`${Astro.url.pathname}${Astro.url.search}`, baseUrl).toString();
 const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() : "";
 ---
+
+const navItems = getNavItems(currentPath);
+const baseUrl =
+  Astro.site ||
+  (import.meta.env.PUBLIC_SITE_URL ? new URL(import.meta.env.PUBLIC_SITE_URL) : null) ||
+  new URL(Astro.url.origin);
+const canonicalUrl = new URL(`${Astro.url.pathname}${Astro.url.search}`, baseUrl).toString();
+const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() : "";
+---
 <!DOCTYPE html>
 <html lang="zh-Hans">
   <head>
-    <ViewTransitions fallback="swap" />
+    <ViewTransitions />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
@@ -47,8 +56,6 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
   <body>
     <video
       class="site-bg-video"
-      transition:name="site-bg-video"
-      transition:persist
       autoplay
       muted
       loop
@@ -58,7 +65,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
     >
       <source src="/app01/backgrounds/水边倒影-水波纹.mp4" type="video/mp4" />
     </video>
-    <div class="site-bg-overlay" transition:name="site-bg-overlay" transition:persist aria-hidden="true"></div>
+    <div class="site-bg-overlay" aria-hidden="true"></div>
     <svg width="0" height="0" style="position:absolute">
       <symbol id="icon-home" viewBox="0 0 24 24">
         <path d="M12 3.5 3 11v9a1 1 0 0 0 1 1h5v-6h6v6h5a1 1 0 0 0 1-1v-9l-9-7.5Z" />
@@ -75,7 +82,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
     </svg>
 
     <div class="layout">
-      <aside class="sidebar" transition:name="site-sidebar" transition:persist>
+      <aside class="sidebar">
         <div class="sidebar-main">
           <div class="profile">
             <img class="avatar avatar-image" src="/app01/avatar.jpg" alt="Micah Hale avatar" width="50" height="50" loading="eager" fetchpriority="high" />
@@ -96,7 +103,7 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
         </div>
       </aside>
 
-      <main class="content" transition:name="page-content">
+      <main class="content">
         <slot />
       </main>
     </div>

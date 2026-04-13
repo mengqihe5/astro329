@@ -7,5 +7,6 @@ export default defineConfig({
   server: {
     host: true,
   },
+  viewTransitions: true,
 });
 

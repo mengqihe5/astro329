@@ -5,26 +5,21 @@
     --font-title: var(--font-main);
 }
 
-::view-transition-group(root),
-::view-transition-old(root),
+::view-transition-old(root) {
+    animation: fade-out 0.1s ease-in-out;
+}
+
 ::view-transition-new(root) {
-    animation: none !important;
+    animation: fade-in 0.1s ease-in-out;
 }
 
-::view-transition-group(page-content) {
-    animation: none !important;
+@keyframes fade-out {
+    to { opacity: 0; }
 }
 
-::view-transition-old(page-content) {
-    animation: none !important;
-}
-
-::view-transition-new(page-content) {
-    animation: none !important;
-}
-
-[data-astro-transition-scope] {
-    animation: none !important;
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 body {
