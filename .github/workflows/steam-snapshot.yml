@@ -1,0 +1,78 @@
+name: Steam Snapshot
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Validate steam secrets
+        id: validate_secrets
+        env:
+          STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+          STEAM_ID: ${{ secrets.STEAM_ID }}
+        run: |
+          if [[ -z "$STEAM_API_KEY" || -z "$STEAM_ID" ]]; then
+            echo "missing=true" >> "$GITHUB_OUTPUT"
+            echo "Missing STEAM_API_KEY or STEAM_ID, skip snapshot."
+          else
+            echo "missing=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync steam snapshot
+        if: ${{ steps.validate_secrets.outputs.missing != 'true' }}
+        env:
+          STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+          STEAM_ID: ${{ secrets.STEAM_ID }}
+        run: npm run steam:snapshot
+
+      - name: Commit changed snapshot files
+        id: commit_snapshots
+        if: ${{ steps.validate_secrets.outputs.missing != 'true' }}
+        run: |
+          if [[ -z "$(git status --porcelain content/steam/daily_totals.json content/steam/monthly_hours.json)" ]]; then
+            echo "No snapshot changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content/steam/daily_totals.json content/steam/monthly_hours.json
+          git commit -m "chore: update steam snapshots"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Netlify deploy
+        if: ${{ steps.commit_snapshots.outputs.changed == 'true' }}
+        env:
+          NETLIFY_BUILD_HOOK_URL: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
+        run: |
+          if [[ -z "$NETLIFY_BUILD_HOOK_URL" ]]; then
+            echo "NETLIFY_BUILD_HOOK_URL is empty, skip deploy hook."
+            exit 0
+          fi
+          curl --fail --show-error --silent -X POST \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "$NETLIFY_BUILD_HOOK_URL"

@@ -1,0 +1,203 @@
+﻿---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import DayArticlePanel from "../components/DayArticlePanel.astro";
+import { buildDashboardData } from "../lib/blog.js";
+
+const monthParam = Astro.url.searchParams.get("month") || "";
+const dayParam = Astro.url.searchParams.get("day") || "";
+
+const data = await buildDashboardData(monthParam, dayParam);
+---
+<BaseLayout
+  title="首页 | Micah Hale"
+  description={`${data.monthLabel} 的写作、游戏与阅读记录面板。`}
+  currentPath={Astro.url.pathname}
+>
+  <section class="dashboard-shell">
+    <header class="dash-greeting dash-greeting-row">
+      <div>
+        <h2>记录</h2>
+        <p class="dash-subtitle">{data.monthLabel} · 写作 / 游戏 / 阅读</p>
+      </div>
+      <details class="month-dropdown" data-month-dropdown data-month-min={data.monthMin} data-month-max={data.monthMax}>
+        <summary class="month-dropdown-trigger">
+          <span class="month-dropdown-label">{data.monthButtonLabel}</span>
+          <span class="month-dropdown-arrow">▾</span>
+        </summary>
+        <form method="get" class="month-dropdown-panel" data-month-form>
+          <input type="hidden" name="month" value={data.selectedMonth} data-month-input />
+          <div class="month-option-list" data-month-list>
+            {
+              data.monthOptions.map((option) => (
+                <a
+                  href={`/?month=${option.value}`}
+                  class:list={["month-option", option.value === data.selectedMonth && "selected"]}
+                  data-month-value={option.value}
+                >
+                  {option.compact}
+                </a>
+              ))
+            }
+          </div>
+        </form>
+      </details>
+    </header>
+
+    <section class="dash-kpi-grid">
+      <article class="dash-kpi-card">
+        <h3>文章记录</h3>
+        <div class="dash-kpi-item">
+          <span class="kpi-dot blue">文</span>
+          <div>
+            <p>累计文章</p>
+            <strong class="kpi-value" data-count={data.statTotalArticles}>0</strong>
+          </div>
+        </div>
+        <div class="dash-kpi-item">
+          <span class="kpi-dot cyan">月</span>
+          <div>
+            <p>本月新增</p>
+            <strong class="kpi-value" data-count={data.statMonthArticles}>0</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="dash-kpi-card">
+        <h3>游戏记录</h3>
+        <div class="dash-kpi-item">
+          <span class="kpi-dot yellow">游</span>
+          <div>
+            <p>总游戏时长</p>
+            <strong class="kpi-metric"><span class="kpi-value kpi-hour-value" data-count={data.statTotalGameHours}>0</span><span class="kpi-unit">h</span></strong>
+          </div>
+        </div>
+        <div class="dash-kpi-item">
+          <span class="kpi-dot pink">月</span>
+          <div>
+            <p>当月游戏时长</p>
+            <strong class="kpi-metric"><span class="kpi-value kpi-hour-value" data-count={data.statMonthGameHours}>0</span><span class="kpi-unit">h</span></strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="dash-kpi-card">
+        <h3>阅读记录</h3>
+        <div class="dash-kpi-item">
+          <span class="kpi-dot purple">书</span>
+          <div>
+            <p>累计书籍</p>
+            <strong class="kpi-value" data-count={data.statTotalBooks}>0</strong>
+          </div>
+        </div>
+        <div class="dash-kpi-item">
+          <span class="kpi-dot green">月</span>
+          <div>
+            <p>本月读书</p>
+            <strong class="kpi-value" data-count={data.statMonthBooks}>0</strong>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="dash-analysis">
+      <div class="dash-analysis-head">
+        <h3>记录分析</h3>
+      </div>
+
+      <div class="dash-analysis-grid">
+        <article class="dash-panel calendar-panel">
+          <h4>写作日历</h4>
+          <div class="calendar-weekdays">
+            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+          </div>
+          <div class="calendar-grid" id="dashboardCalendar">
+            {
+              data.calendarWeeks.map((week) =>
+                week.map((cell) => {
+                  if (cell.inMonth) {
+                    const href = `/?month=${data.selectedMonth}&day=${cell.date}`;
+                    const active = data.selectedDay === cell.date;
+                    return (
+                      <a href={href} class:list={["calendar-cell", "calendar-day-link", `level-${cell.level}`, active && "active"]}>
+                        {cell.day}
+                      </a>
+                    );
+                  }
+                  return <span class="calendar-cell out-month">{cell.day}</span>;
+                })
+              )
+            }
+          </div>
+        </article>
+
+        <article class="dash-panel day-article-panel" id="dayArticlePanel">
+          <DayArticlePanel selectedDayLabel={data.selectedDayLabel} calendarArticles={data.calendarArticles} />
+        </article>
+      </div>
+
+      <article class="dash-panel daily-bars-panel">
+        <h4>本月游戏复式条形图</h4>
+        <div class="daily-chart-shell">
+          <div class="daily-axis-y">
+            <span>{data.dailyAxisMax}h</span>
+            <span>{data.dailyAxisMid}h</span>
+            <span>0h</span>
+          </div>
+          <div class="daily-bars-wrap">
+            {
+              data.dailyGameChartDisplay.map((row) => {
+                if (row.kind === "game_free") {
+                  return (
+                    <div class="daily-game-free-merged" style={`width: ${row.widthPx}px;`} title={`${row.startDay} - ${row.endDay}`}>
+                      <span class="game-free-mark">Game-free</span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div class="daily-bar-col">
+                    <div class="daily-bar-stack">
+                      <div class="daily-bar-item">
+                        <span class="daily-bar-value">{row.maxHours}</span>
+                        <span
+                          class="daily-bar max"
+                          style={`height: ${row.maxHeight}%; ${row.maxHours > 0 ? "min-height: 2px;" : "min-height: 0;"}`}
+                          title={`单日最长游戏 ${row.maxHours}h`}
+                        ></span>
+                      </div>
+                      <div class="daily-bar-item">
+                        <span class="daily-bar-value">{row.totalHours}</span>
+                        <span
+                          class="daily-bar total"
+                          style={`height: ${row.totalHeight}%; ${row.totalHours > 0 ? "min-height: 2px;" : "min-height: 0;"}`}
+                          title={`单日总时长 ${row.totalHours}h`}
+                        ></span>
+                      </div>
+                    </div>
+                    <span class="daily-max-cover" title={row.maxGameName || "暂无数据"}>
+                      {
+                        row.maxCoverUrl ? (
+                          <img src={row.maxCoverUrl} alt={row.maxGameName || "game cover"} loading="lazy" decoding="async" fetchpriority="low" />
+                        ) : (
+                          <span class="daily-cover-empty">-</span>
+                        )
+                      }
+                    </span>
+                    <span class="daily-bar-day">{row.day}</span>
+                  </div>
+                );
+              })
+            }
+          </div>
+        </div>
+        <div class="daily-axis-foot">
+          <p class="daily-axis-x">日期（本月）</p>
+          <div class="daily-bar-legend">
+            <span><i class="legend-dot max"></i>本日最长游戏时长</span>
+            <span><i class="legend-dot total"></i>本日总时长</span>
+          </div>
+        </div>
+      </article>
+    </section>
+  </section>
+</BaseLayout>

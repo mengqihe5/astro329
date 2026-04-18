@@ -1,0 +1,26 @@
+---
+const { book } = Astro.props;
+const coverCandidates = JSON.stringify(book.coverCandidates || []);
+const coverFallback = String(book.coverFallback || "/app01/book-covers/default-book.svg");
+---
+<a href={`/books/${book.slug}/`} class="card card-link book-card">
+  <div class="card-media book-media">
+    <img
+      src={book.cover}
+      alt={`${book.title} cover`}
+      data-book-cover="1"
+      data-cover-candidates={coverCandidates}
+      data-cover-fallback={coverFallback}
+      data-book-title={book.title}
+      data-book-slug={book.slug}
+      width="576"
+      height="834"
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
+    />
+  </div>
+  <div class="card-body">
+    <h3>{book.title}</h3>
+  </div>
+</a>

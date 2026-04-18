@@ -1,0 +1,143 @@
+
+> micah-blog-astro@1.0.0 dev
+> astro dev 127.0.0.1 4321
+
+[2m21:03:39[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m21:03:39[22m [34m[vite][39m Environment loaded
+[2m21:03:39[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m21:03:39[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.
+[2m21:03:39[22m [34m[types][39m Generated [2m2ms[22m
+[2m21:03:39[22m [34m[content][39m Syncing content
+[2m21:03:39[22m [34m[content][39m Synced content
+[2m21:03:39[22m [34m[vite][39m Port 4321 is in use, trying another one...
+
+[42m[1m astro [22m[49m [32mv5.18.1[39m [2mready in[22m 3843 [2mms[22m
+
+[2m┃[22m Local    [36mhttp://localhost:4322/[39m
+[2m┃[22m Network  [36mhttp://198.18.0.1:4322/[39m
+           [36mhttp://172.25.108.70:4322/[39m
+
+[2m21:03:40[22m [32mwatching for file changes...[39m
+[2m21:04:01[22m [34m[200][39m /articles/ [2m92ms[22m
+[2m21:04:02[22m [34m[200][39m /books/ [2m14ms[22m
+[2m21:04:04[22m [34m[200][39m /steam/ [2m1212ms[22m
+[2m21:04:04[22m [34m[200][39m / [2m2021ms[22m
+[2m21:04:05[22m [34m[200][39m /articles/ [2m10ms[22m
+[2m21:04:06[22m [34m[200][39m / [2m32ms[22m
+[2m21:04:06[22m [34m[200][39m /books/ [2m7ms[22m
+[2m21:04:06[22m [34m[200][39m /steam/ [2m14ms[22m
+[2m21:04:07[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:04:07[22m [34m[200][39m / [2m20ms[22m
+[2m21:04:07[22m [34m[200][39m /books/ [2m5ms[22m
+[2m21:04:07[22m [34m[200][39m /steam/ [2m11ms[22m
+[2m21:04:08[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m21:04:09[22m [34m[200][39m / [2m22ms[22m
+[2m21:04:09[22m [34m[200][39m /steam/ [2m13ms[22m
+[2m21:04:09[22m [34m[200][39m /books/ [2m5ms[22m
+[2m21:04:10[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m21:04:10[22m [34m[200][39m / [2m19ms[22m
+[2m21:04:10[22m [34m[200][39m /steam/ [2m7ms[22m
+[2m21:04:10[22m [34m[200][39m /books/ [2m6ms[22m
+[2m21:04:11[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m21:04:12[22m [34m[200][39m / [2m21ms[22m
+[2m21:04:12[22m [34m[200][39m /steam/ [2m10ms[22m
+[2m21:04:12[22m [34m[200][39m /books/ [2m4ms[22m
+[2m21:04:13[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:04:13[22m [34m[200][39m / [2m23ms[22m
+[2m21:04:13[22m [34m[200][39m /steam/ [2m11ms[22m
+[2m21:04:13[22m [34m[200][39m /books/ [2m3ms[22m
+[2m21:04:14[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m21:04:15[22m [34m[200][39m / [2m19ms[22m
+[2m21:04:15[22m [34m[200][39m /steam/ [2m19ms[22m
+[2m21:04:15[22m [34m[200][39m /books/ [2m6ms[22m
+[2m21:04:16[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:04:16[22m [34m[200][39m / [2m20ms[22m
+[2m21:04:16[22m [34m[200][39m /steam/ [2m12ms[22m
+[2m21:04:16[22m [34m[200][39m /books/ [2m11ms[22m
+[2m21:04:17[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m21:04:18[22m [34m[200][39m / [2m25ms[22m
+[2m21:04:18[22m [34m[200][39m /books/ [2m5ms[22m
+[2m21:04:18[22m [34m[200][39m /steam/ [2m13ms[22m
+[2m21:08:08[22m [34m[200][39m /articles/ [2m11ms[22m
+[2m21:08:09[22m [34m[200][39m / [2m25ms[22m
+[2m21:08:09[22m [34m[200][39m /books/ [2m8ms[22m
+[2m21:08:10[22m [34m[200][39m /steam/ [2m1443ms[22m
+[2m21:08:11[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:08:11[22m [34m[200][39m / [2m25ms[22m
+[2m21:08:12[22m [34m[200][39m /steam/ [2m13ms[22m
+[2m21:08:12[22m [34m[200][39m /books/ [2m7ms[22m
+[2m21:08:12[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:08:13[22m [34m[200][39m / [2m11ms[22m
+[2m21:08:13[22m [34m[200][39m /steam/ [2m16ms[22m
+[2m21:08:13[22m [34m[200][39m /books/ [2m7ms[22m
+[2m21:08:14[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m21:08:14[22m [34m[200][39m / [2m26ms[22m
+[2m21:08:14[22m [34m[200][39m /steam/ [2m16ms[22m
+[2m21:08:14[22m [34m[200][39m /books/ [2m9ms[22m
+[2m21:08:15[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:08:16[22m [34m[200][39m / [2m30ms[22m
+[2m21:08:16[22m [34m[200][39m /steam/ [2m19ms[22m
+[2m21:08:16[22m [34m[200][39m /books/ [2m8ms[22m
+[2m21:08:17[22m [34m[200][39m /articles/ [2m5ms[22m
+[2m21:08:17[22m [34m[200][39m / [2m26ms[22m
+[2m21:08:17[22m [34m[200][39m /steam/ [2m17ms[22m
+[2m21:08:17[22m [34m[200][39m /books/ [2m6ms[22m
+[2m21:08:18[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:08:19[22m [34m[200][39m / [2m30ms[22m
+[2m21:08:19[22m [34m[200][39m /steam/ [2m18ms[22m
+[2m21:08:19[22m [34m[200][39m /books/ [2m8ms[22m
+[2m21:08:19[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m21:08:20[22m [34m[200][39m / [2m27ms[22m
+[2m21:08:20[22m [34m[200][39m /books/ [2m10ms[22m
+[2m21:08:20[22m [34m[200][39m /steam/ [2m18ms[22m
+[2m21:08:21[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:08:21[22m [34m[200][39m / [2m32ms[22m
+[2m21:08:21[22m [34m[200][39m /steam/ [2m16ms[22m
+[2m21:08:21[22m [34m[200][39m /books/ [2m8ms[22m
+[2m21:08:22[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:08:23[22m [34m[200][39m / [2m23ms[22m
+[2m21:08:23[22m [34m[200][39m /books/ [2m4ms[22m
+[2m21:08:23[22m [34m[200][39m /steam/ [2m24ms[22m
+[2m21:09:38[22m [34m[200][39m /articles/ [2m9ms[22m
+[2m21:09:38[22m [34m[200][39m / [2m27ms[22m
+[2m21:09:38[22m [34m[200][39m /books/ [2m4ms[22m
+[2m21:09:40[22m [34m[200][39m /steam/ [2m1380ms[22m
+[2m21:09:41[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:09:41[22m [34m[200][39m / [2m21ms[22m
+[2m21:09:41[22m [34m[200][39m /steam/ [2m18ms[22m
+[2m21:09:41[22m [34m[200][39m /books/ [2m6ms[22m
+[2m21:09:42[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m21:09:43[22m [34m[200][39m / [2m36ms[22m
+[2m21:09:43[22m [34m[200][39m /steam/ [2m20ms[22m
+[2m21:09:43[22m [34m[200][39m /books/ [2m8ms[22m
+[2m21:09:44[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m21:09:44[22m [34m[200][39m / [2m28ms[22m
+[2m21:09:44[22m [34m[200][39m /steam/ [2m24ms[22m
+[2m21:09:44[22m [34m[200][39m /books/ [2m11ms[22m
+[2m21:09:45[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:09:46[22m [34m[200][39m / [2m33ms[22m
+[2m21:09:46[22m [34m[200][39m /steam/ [2m25ms[22m
+[2m21:09:46[22m [34m[200][39m /books/ [2m10ms[22m
+[2m21:09:47[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:09:47[22m [34m[200][39m / [2m36ms[22m
+[2m21:09:47[22m [34m[200][39m /steam/ [2m21ms[22m
+[2m21:09:47[22m [34m[200][39m /books/ [2m10ms[22m
+[2m21:09:48[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:09:49[22m [34m[200][39m / [2m37ms[22m
+[2m21:09:49[22m [34m[200][39m /steam/ [2m25ms[22m
+[2m21:09:49[22m [34m[200][39m /books/ [2m12ms[22m
+[2m21:09:50[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m21:09:50[22m [34m[200][39m / [2m28ms[22m
+[2m21:09:50[22m [34m[200][39m /steam/ [2m18ms[22m
+[2m21:09:50[22m [34m[200][39m /books/ [2m6ms[22m
+[2m21:10:39[22m Configuration file updated. Restarting...
+[2m21:10:40[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m21:10:40[22m [34m[vite][39m Environment loaded
+[2m21:10:40[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m21:10:40[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.
+[2m21:10:40[22m [34m[vite][39m Re-optimizing dependencies because vite config has changed
+[2m21:10:41[22m [34m[content][39m Syncing content
+[2m21:10:41[22m [34m[content][39m Synced content
+[2m21:10:41[22m [34m[types][39m Generated [2m354ms[22m
+[2m21:10:41[22m [34m[vite][39m Re-optimizing dependencies because vite config has changed
+[2m21:10:41[22m [34m[vite][39m Port 4321 is in use, trying another one...

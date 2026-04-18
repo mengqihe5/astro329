@@ -1,0 +1,123 @@
+﻿---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { loadArticles } from "../../lib/blog.js";
+
+const params = Astro.url.searchParams;
+
+const allArticles = loadArticles("desc");
+const allTags = [...new Set(allArticles.flatMap((article) => article.tags || []))].sort((a, b) => a.localeCompare(b));
+const allYears = [...new Set(allArticles.map((article) => String(article.date).slice(0, 4)).filter((year) => /^\d{4}$/.test(year)))]
+  .sort((a, b) => Number(b) - Number(a));
+
+const yearRaw = params.get("year") || "all";
+const selectedYear = yearRaw !== "all" && allYears.includes(yearRaw) ? yearRaw : "all";
+
+const tagRaw = params.get("tag") || "all";
+const selectedTag = tagRaw !== "all" && allTags.includes(tagRaw) ? tagRaw : "all";
+
+const yearCounts = allYears.map((year) => ({
+  year,
+  count: allArticles.filter((article) => String(article.date).startsWith(`${year}-`)).length,
+}));
+
+const tagCounts = allTags.map((tag) => ({
+  tag,
+  count: allArticles.filter((article) => (article.tags || []).includes(tag)).length,
+}));
+
+const filteredArticles = allArticles.filter((article) => {
+  const yearMatch = selectedYear === "all" || String(article.date).startsWith(`${selectedYear}-`);
+  const tagMatch = selectedTag === "all" || (article.tags || []).includes(selectedTag);
+  return yearMatch && tagMatch;
+});
+
+function toArticlesUrl(next) {
+  const nextParams = new URLSearchParams();
+  const yearValue = typeof next.year === "string" ? next.year : selectedYear;
+  const tagValue = typeof next.tag === "string" ? next.tag : selectedTag;
+
+  if (yearValue && yearValue !== "all") nextParams.set("year", yearValue);
+  if (tagValue && tagValue !== "all") nextParams.set("tag", tagValue);
+
+  const query = nextParams.toString();
+  return query ? `/articles/?${query}` : "/articles/";
+}
+---
+<BaseLayout
+  title="文章 | Micah Hale"
+  description={`共 ${filteredArticles.length} 篇文章，支持时间归档与标签归档。`}
+  currentPath={Astro.url.pathname}
+  contentClass="page-shell-content"
+>
+  <section class="articles-layout">
+    <div class="articles-main">
+      <section class="page-head article-page-head">
+        <h2>文章</h2>
+        <p class="meta article-head-meta">共 {filteredArticles.length} 篇</p>
+      </section>
+
+      {
+        filteredArticles.length > 0 ? (
+          <div class="article-strip-list">
+            {filteredArticles.map((article) => (
+              <a href={`/articles/${article.slug}/`} class="card card-link article-strip-card">
+                <div class="article-strip-content">
+                  <h3>{article.title}</h3>
+                  <div class="article-strip-foot">
+                    <div class="article-strip-meta">
+                      <span class="article-strip-date">{article.date}</span>
+                    </div>
+                    <p class="meta article-strip-tags">
+                      {(article.tags && article.tags.length > 0 ? article.tags : ["未分类"]).map((tag) => (
+                        <span class="article-tag-chip">{tag}</span>
+                      ))}
+                    </p>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <article class="card article-empty-card">
+            <p>当前筛选条件下没有文章，试试清空搜索或切换归档/标签。</p>
+          </article>
+        )
+      }
+    </div>
+
+    <details class="articles-side-drawer" open>
+      <summary class="articles-side-toggle">筛选与归档</summary>
+      <aside class="articles-side">
+        <section class="card article-side-block">
+          <h3 class="article-side-title">∞ 时间归档</h3>
+          <div class="article-side-list">
+            <a href={toArticlesUrl({ year: "all" })} class:list={["article-side-item", selectedYear === "all" && "active"]}>
+              <span>全部</span>
+              <span>{allArticles.length}</span>
+            </a>
+            {yearCounts.map((item) => (
+              <a href={toArticlesUrl({ year: item.year })} class:list={["article-side-item", selectedYear === item.year && "active"]}>
+                <span>{item.year}</span>
+                <span>{item.count}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section class="card article-side-block article-side-tags-block">
+          <h3 class="article-side-title"><span class="article-side-hash">#</span> 标签归档</h3>
+          <div class="article-side-tags">
+            <a href={toArticlesUrl({ tag: "all" })} class:list={["chip", selectedTag === "all" && "active"]}>
+              全部（{allArticles.length}）
+            </a>
+            {tagCounts.map((item) => (
+              <a href={toArticlesUrl({ tag: item.tag })} class:list={["chip", selectedTag === item.tag && "active"]}>
+                {item.tag} ({item.count})
+              </a>
+            ))}
+          </div>
+        </section>
+      </aside>
+    </details>
+  </section>
+</BaseLayout>

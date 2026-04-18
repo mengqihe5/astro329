@@ -1,0 +1,97 @@
+
+> micah-blog-astro@1.0.0 dev
+> astro dev 127.0.0.1 4321
+
+[2m20:18:06[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m20:18:06[22m [34m[vite][39m Environment loaded
+[2m20:18:06[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m20:18:06[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.
+[2m20:18:06[22m [34m[types][39m Generated [2m3ms[22m
+[2m20:18:06[22m [34m[content][39m Syncing content
+[2m20:18:06[22m [34m[content][39m Synced content
+[2m20:18:06[22m [34m[vite][39m Port 4321 is in use, trying another one...
+
+[42m[1m astro [22m[49m [32mv5.18.1[39m [2mready in[22m 3797 [2mms[22m
+
+[2m┃[22m Local    [36mhttp://localhost:4322/[39m
+[2m┃[22m Network  [36mhttp://198.18.0.1:4322/[39m
+           [36mhttp://172.25.108.70:4322/[39m
+
+[2m20:18:06[22m [32mwatching for file changes...[39m
+[2m20:18:44[22m [34m[200][39m /articles/ [2m139ms[22m
+[2m20:18:45[22m [34m[200][39m /books/ [2m16ms[22m
+[2m20:18:49[22m [34m[200][39m / [2m3549ms[22m
+[2m20:18:49[22m [34m[200][39m /steam/ [2m3529ms[22m
+[2m20:18:53[22m [34m[200][39m /steam/ [2m3542ms[22m
+[2m20:18:54[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:18:54[22m [34m[200][39m /books/ [2m12ms[22m
+[2m20:18:58[22m [34m[200][39m / [2m3528ms[22m
+[2m20:18:58[22m [34m[200][39m /books/ [2m13ms[22m
+[2m20:18:59[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:19:03[22m [34m[200][39m / [2m3528ms[22m
+[2m20:19:03[22m [34m[200][39m /steam/ [2m3526ms[22m
+[2m20:19:22[22m [34m[200][39m /articles/ [2m14ms[22m
+[2m20:19:23[22m [34m[200][39m /books/ [2m10ms[22m
+[2m20:19:26[22m [34m[200][39m / [2m3539ms[22m
+[2m20:19:26[22m [34m[200][39m /steam/ [2m3526ms[22m
+[2m20:19:30[22m [34m[200][39m /steam/ [2m3526ms[22m
+[2m20:19:31[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m20:19:31[22m [34m[200][39m /books/ [2m9ms[22m
+[2m20:19:35[22m [34m[200][39m / [2m3543ms[22m
+[2m20:19:35[22m [34m[200][39m /books/ [2m10ms[22m
+[2m20:19:36[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m20:19:40[22m [34m[200][39m / [2m3539ms[22m
+[2m20:19:40[22m [34m[200][39m /steam/ [2m3526ms[22m
+[2m20:19:41[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m20:19:41[22m [34m[200][39m /books/ [2m7ms[22m
+[2m20:19:45[22m [34m[200][39m / [2m3540ms[22m
+[2m20:19:45[22m [34m[200][39m /steam/ [2m3523ms[22m
+[2m20:19:49[22m [34m[200][39m /steam/ [2m3522ms[22m
+[2m20:19:50[22m [34m[200][39m /articles/ [2m9ms[22m
+[2m20:19:50[22m [34m[200][39m /books/ [2m8ms[22m
+[2m20:19:53[22m [34m[200][39m / [2m3530ms[22m
+[2m20:19:54[22m [34m[200][39m /books/ [2m9ms[22m
+[2m20:19:55[22m [34m[200][39m /articles/ [2m9ms[22m
+[2m20:19:58[22m [34m[200][39m / [2m3522ms[22m
+[2m20:19:58[22m [34m[200][39m /steam/ [2m3532ms[22m
+[2m20:19:59[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:20:00[22m [34m[200][39m /books/ [2m7ms[22m
+[2m20:20:03[22m [34m[200][39m / [2m3535ms[22m
+[2m20:20:03[22m [34m[200][39m /steam/ [2m3514ms[22m
+[2m20:20:08[22m [34m[200][39m /steam/ [2m3522ms[22m
+[2m20:20:08[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:20:08[22m [34m[200][39m /books/ [2m8ms[22m
+[2m20:20:12[22m [34m[200][39m / [2m3519ms[22m
+[2m20:20:13[22m [34m[200][39m /books/ [2m3ms[22m
+[2m20:20:13[22m [34m[200][39m /articles/ [2m5ms[22m
+[2m20:20:17[22m [34m[200][39m / [2m3516ms[22m
+[2m20:20:17[22m [34m[200][39m /steam/ [2m3513ms[22m
+[2m20:20:18[22m [34m[200][39m /articles/ [2m4ms[22m
+[2m20:20:18[22m [34m[200][39m /books/ [2m3ms[22m
+[2m20:20:22[22m [34m[200][39m / [2m3518ms[22m
+[2m20:20:22[22m [34m[200][39m /steam/ [2m3518ms[22m
+[2m20:20:26[22m [34m[200][39m /steam/ [2m3533ms[22m
+[2m20:20:27[22m [34m[200][39m /books/ [2m8ms[22m
+[2m20:20:27[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m20:20:30[22m [34m[200][39m / [2m3523ms[22m
+[2m20:20:31[22m [34m[200][39m /books/ [2m4ms[22m
+[2m20:20:31[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m20:20:35[22m [34m[200][39m / [2m3516ms[22m
+[2m20:20:35[22m [34m[200][39m /steam/ [2m3525ms[22m
+[2m20:20:36[22m [34m[200][39m /articles/ [2m5ms[22m
+[2m20:20:36[22m [34m[200][39m /books/ [2m4ms[22m
+[2m20:20:40[22m [34m[200][39m / [2m3528ms[22m
+[2m20:20:40[22m [34m[200][39m /steam/ [2m3519ms[22m
+[2m20:20:44[22m [34m[200][39m /steam/ [2m3525ms[22m
+[2m20:20:45[22m [34m[200][39m /articles/ [2m4ms[22m
+[2m20:20:45[22m [34m[200][39m /books/ [2m8ms[22m
+[2m20:20:49[22m [34m[200][39m / [2m3521ms[22m
+[2m20:20:49[22m [34m[200][39m /books/ [2m8ms[22m
+[2m20:20:50[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:20:53[22m [34m[200][39m / [2m3527ms[22m
+[2m20:20:53[22m [34m[200][39m /steam/ [2m3512ms[22m
+[2m20:21:09[22m Configuration file updated. Restarting...
+[2m20:21:09[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m20:21:10[22m [34m[vite][39m Environment loaded
+[2m20:21:10[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m20:21:10[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.

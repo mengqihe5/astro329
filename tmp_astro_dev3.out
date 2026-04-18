@@ -1,0 +1,71 @@
+
+> micah-blog-astro@1.0.0 dev
+> astro dev 127.0.0.1 4321
+
+[2m20:38:02[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m20:38:03[22m [34m[vite][39m Environment loaded
+[2m20:38:03[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m20:38:03[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.
+[2m20:38:03[22m [34m[types][39m Generated [2m2ms[22m
+[2m20:38:03[22m [34m[content][39m Syncing content
+[2m20:38:03[22m [34m[content][39m Synced content
+[2m20:38:03[22m [34m[vite][39m Port 4321 is in use, trying another one...
+
+[42m[1m astro [22m[49m [32mv5.18.1[39m [2mready in[22m 3585 [2mms[22m
+
+[2m┃[22m Local    [36mhttp://localhost:4322/[39m
+[2m┃[22m Network  [36mhttp://198.18.0.1:4322/[39m
+           [36mhttp://172.25.108.70:4322/[39m
+
+[2m20:38:03[22m [32mwatching for file changes...[39m
+[2m20:38:18[22m [34m[200][39m /articles/ [2m63ms[22m
+[2m20:38:38[22m [34m[200][39m /articles/ [2m9ms[22m
+[2m20:38:39[22m [34m[200][39m /books/ [2m5ms[22m
+[2m20:38:43[22m [34m[200][39m /steam/ [2m3520ms[22m
+[2m20:38:43[22m [34m[200][39m / [2m3519ms[22m
+[2m20:39:36[22m [34m[200][39m /articles/ [2m15ms[22m
+[2m20:39:37[22m [34m[200][39m /books/ [2m5ms[22m
+[2m20:39:40[22m [34m[200][39m / [2m3534ms[22m
+[2m20:39:40[22m [34m[200][39m /steam/ [2m3522ms[22m
+[2m20:39:41[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m20:39:42[22m [34m[200][39m /books/ [2m10ms[22m
+[2m20:39:45[22m [34m[200][39m / [2m3523ms[22m
+[2m20:39:45[22m [34m[200][39m /steam/ [2m3533ms[22m
+[2m20:39:46[22m [34m[200][39m /articles/ [2m5ms[22m
+[2m20:39:47[22m [34m[200][39m /books/ [2m6ms[22m
+[2m20:39:50[22m [34m[200][39m / [2m3520ms[22m
+[2m20:39:50[22m [34m[200][39m /steam/ [2m3514ms[22m
+[2m20:40:38[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:40:39[22m [34m[200][39m /books/ [2m10ms[22m
+[2m20:40:42[22m [34m[200][39m / [2m3534ms[22m
+[2m20:40:42[22m [34m[200][39m /steam/ [2m3521ms[22m
+[2m20:40:43[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m20:40:44[22m [34m[200][39m /books/ [2m10ms[22m
+[2m20:40:47[22m [34m[200][39m / [2m3534ms[22m
+[2m20:40:47[22m [34m[200][39m /steam/ [2m3524ms[22m
+[2m20:40:48[22m [34m[200][39m /articles/ [2m9ms[22m
+[2m20:40:49[22m [34m[200][39m /books/ [2m11ms[22m
+[2m20:40:52[22m [34m[200][39m / [2m3519ms[22m
+[2m20:40:52[22m [34m[200][39m /steam/ [2m3527ms[22m
+[2m20:40:53[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:40:54[22m [34m[200][39m /books/ [2m9ms[22m
+[2m20:40:57[22m [34m[200][39m / [2m3538ms[22m
+[2m20:40:57[22m [34m[200][39m /steam/ [2m3521ms[22m
+[2m20:40:58[22m [34m[200][39m /articles/ [2m4ms[22m
+[2m20:40:59[22m [34m[200][39m /books/ [2m7ms[22m
+[2m20:41:02[22m [34m[200][39m / [2m3533ms[22m
+[2m20:41:02[22m [34m[200][39m /steam/ [2m3517ms[22m
+[2m20:41:42[22m [34m[200][39m /articles/ [2m9ms[22m
+[2m20:41:43[22m [34m[200][39m /books/ [2m7ms[22m
+[2m20:41:44[22m [34m[200][39m / [2m1330ms[22m
+[2m20:41:44[22m [34m[200][39m /steam/ [2m1349ms[22m
+[2m20:42:08[22m Configuration file updated. Restarting...
+[2m20:42:09[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m20:42:10[22m [34m[vite][39m Environment loaded
+[2m20:42:10[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m20:42:10[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.
+[2m20:42:10[22m [34m[content][39m Syncing content
+[2m20:42:10[22m [34m[content][39m Synced content
+[2m20:42:10[22m [34m[types][39m Generated [2m290ms[22m
+[2m20:42:10[22m [34m[vite][39m Re-optimizing dependencies because vite config has changed
+[2m20:42:10[22m [34m[vite][39m Port 4321 is in use, trying another one...

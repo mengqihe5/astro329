@@ -1,0 +1,123 @@
+
+> micah-blog-astro@1.0.0 dev
+> astro dev 127.0.0.1 4321
+
+[2m19:52:25[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m19:52:26[22m [34m[vite][39m Environment loaded
+[2m19:52:26[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m19:52:26[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.
+[2m19:52:26[22m [34m[types][39m Generated [2m2ms[22m
+[2m19:52:26[22m [34m[content][39m Syncing content
+[2m19:52:26[22m [34m[content][39m Synced content
+[2m19:52:26[22m [34m[vite][39m Port 4321 is in use, trying another one...
+
+[42m[1m astro [22m[49m [32mv5.18.1[39m [2mready in[22m 3238 [2mms[22m
+
+[2m┃[22m Local    [36mhttp://localhost:4322/[39m
+[2m┃[22m Network  [36mhttp://198.18.0.1:4322/[39m
+           [36mhttp://172.25.108.70:4322/[39m
+
+[2m19:52:26[22m [32mwatching for file changes...[39m
+[2m19:53:28[22m Configuration file updated. Restarting...
+[2m19:53:28[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m19:53:29[22m [34m[vite][39m Environment loaded
+[2m19:53:29[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m19:53:29[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.
+[2m19:53:29[22m [34m[vite][39m Re-optimizing dependencies because lockfile has changed
+[2m19:53:29[22m [34m[content][39m Syncing content
+[2m19:53:29[22m [34m[content][39m Synced content
+[2m19:53:29[22m [34m[types][39m Generated [2m275ms[22m
+[2m19:53:29[22m [34m[vite][39m Re-optimizing dependencies because vite config has changed
+[2m19:53:30[22m [34m[200][39m /books/ [2m43ms[22m
+[2m19:56:15[22m [34m[200][39m /books/ [2m29ms[22m
+[2m19:56:27[22m [34m[200][39m /articles/ [2m45ms[22m
+[2m19:56:27[22m [34m[200][39m /steam/ [2m35ms[22m
+[2m19:56:27[22m [34m[200][39m / [2m48ms[22m
+[2m19:56:27[22m [34m[200][39m /books/毛泽东传/ [2m14ms[22m
+[2m19:56:28[22m [34m[200][39m /books/ [2m12ms[22m
+[2m19:56:38[22m [34m[200][39m /steam/ [2m26ms[22m
+[2m19:56:39[22m [34m[200][39m / [2m42ms[22m
+[2m19:56:39[22m [34m[200][39m /steam/ [2m26ms[22m
+[2m19:56:39[22m [34m[200][39m /articles/ [2m10ms[22m
+[2m19:56:40[22m [34m[200][39m /books/ [2m14ms[22m
+[2m19:57:22[22m [34m[200][39m /articles/blog修改/ [2m12ms[22m
+[2m19:57:23[22m [34m[200][39m /articles/301/ [2m9ms[22m
+[2m19:57:26[22m [34m[200][39m /articles/ [2m16ms[22m
+[2m19:57:26[22m [34m[200][39m / [2m41ms[22m
+[2m19:57:26[22m [34m[200][39m /steam/ [2m21ms[22m
+[2m19:57:26[22m [34m[200][39m /books/ [2m9ms[22m
+[2m19:57:27[22m [34m[200][39m /articles/the little prince/ [2m9ms[22m
+[2m19:57:27[22m [34m[200][39m /articles/301/ [2m7ms[22m
+[2m19:57:35[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m19:57:36[22m [34m[200][39m / [2m37ms[22m
+[2m19:57:36[22m [34m[200][39m /steam/ [2m20ms[22m
+[2m19:57:36[22m [34m[200][39m /books/ [2m8ms[22m
+[2m19:57:36[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m19:57:36[22m [34m[200][39m / [2m37ms[22m
+[2m19:57:36[22m [34m[200][39m /steam/ [2m21ms[22m
+[2m19:57:36[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m19:57:36[22m [34m[200][39m /books/ [2m9ms[22m
+[2m19:57:37[22m [34m[200][39m / [2m33ms[22m
+[2m19:57:37[22m [34m[200][39m /books/ [2m8ms[22m
+[2m19:57:37[22m [34m[200][39m /steam/ [2m21ms[22m
+[2m19:57:37[22m [34m[200][39m /articles/ [2m10ms[22m
+[2m19:57:37[22m [34m[200][39m / [2m39ms[22m
+[2m19:57:37[22m [34m[200][39m /steam/ [2m20ms[22m
+[2m19:57:37[22m [34m[200][39m /books/ [2m7ms[22m
+[2m19:57:38[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m19:57:48[22m [34m[200][39m /books/百年孤独/ [2m16ms[22m
+[2m19:57:48[22m [34m[200][39m /books/卡拉马佐夫兄弟/ [2m13ms[22m
+[2m19:57:49[22m [34m[200][39m /books/你当像鸟飞往你的山/ [2m10ms[22m
+[2m19:57:53[22m [34m[200][39m /books/ [2m10ms[22m
+[2m19:57:53[22m [34m[200][39m / [2m35ms[22m
+[2m19:57:53[22m [34m[200][39m /steam/ [2m20ms[22m
+[2m19:57:53[22m [34m[200][39m /articles/ [2m9ms[22m
+[2m19:57:53[22m [34m[200][39m /books/ [2m9ms[22m
+[2m19:57:54[22m [34m[200][39m / [2m33ms[22m
+[2m19:57:54[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m19:57:54[22m [34m[200][39m /steam/ [2m19ms[22m
+[2m19:57:54[22m [34m[200][39m /books/ [2m7ms[22m
+[2m19:57:54[22m [34m[200][39m / [2m33ms[22m
+[2m19:57:54[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m19:57:54[22m [34m[200][39m /steam/ [2m19ms[22m
+[2m19:57:55[22m [34m[200][39m /books/ [2m13ms[22m
+[2m19:58:11[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m19:58:11[22m [34m[200][39m /articles/ [2m11ms[22m
+[2m19:58:12[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m19:58:12[22m [34m[200][39m /articles/ [2m13ms[22m
+[2m19:58:12[22m [34m[200][39m /articles/markdown/ [2m10ms[22m
+[2m19:58:12[22m [34m[200][39m / [2m37ms[22m
+[2m19:58:12[22m [34m[200][39m /steam/ [2m29ms[22m
+[2m19:58:12[22m [34m[200][39m /books/ [2m9ms[22m
+[2m19:58:22[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m19:58:22[22m [34m[200][39m / [2m36ms[22m
+[2m19:58:22[22m [34m[200][39m /steam/ [2m23ms[22m
+[2m19:58:22[22m [34m[200][39m /books/ [2m10ms[22m
+[2m19:58:22[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m19:58:23[22m [34m[200][39m / [2m36ms[22m
+[2m19:58:23[22m [34m[200][39m /steam/ [2m22ms[22m
+[2m19:58:23[22m [34m[200][39m /books/ [2m8ms[22m
+[2m19:58:23[22m [34m[200][39m /articles/301/ [2m8ms[22m
+[2m20:01:01[22m [34m[200][39m /articles/ [2m8ms[22m
+[2m20:01:01[22m [34m[200][39m / [2m35ms[22m
+[2m20:01:01[22m [34m[200][39m /steam/ [2m17ms[22m
+[2m20:01:01[22m [34m[200][39m /books/ [2m8ms[22m
+[2m20:01:01[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:01:02[22m [34m[200][39m / [2m30ms[22m
+[2m20:01:02[22m [34m[200][39m /books/ [2m7ms[22m
+[2m20:01:02[22m [34m[200][39m /steam/ [2m19ms[22m
+[2m20:01:02[22m [34m[200][39m /articles/ [2m7ms[22m
+[2m20:01:02[22m [34m[200][39m / [2m32ms[22m
+[2m20:01:02[22m [34m[200][39m /books/ [2m8ms[22m
+[2m20:01:02[22m [34m[200][39m /steam/ [2m18ms[22m
+[2m20:01:03[22m [34m[200][39m /articles/ [2m6ms[22m
+[2m20:01:05[22m Configuration file updated. Restarting...
+[2m20:01:05[22m [34m[@astrojs/netlify][39m Enabling sessions with Netlify Blobs
+[2m20:01:06[22m [34m[vite][39m Environment loaded
+[2m20:01:06[22m [34m[vite][39m Middleware loaded. Emulating features: aiGateway, blobs, edgeFunctions, functions, geolocation, headers, images, redirects, static.
+[2m20:01:06[22m [34m[vite][39m 💭 Linking this project to a Netlify site lets you deploy your site, use any environment variables defined on your team and site and much more. Run npx netlify init to get started.
+[2m20:01:07[22m [34m[content][39m Syncing content
+[2m20:01:07[22m [34m[content][39m Synced content
+[2m20:01:07[22m [34m[types][39m Generated [2m438ms[22m
+[2m20:01:07[22m [34m[vite][39m Re-optimizing dependencies because vite config has changed
+[2m20:01:07[22m [34m[vite][39m Port 4321 is in use, trying another one...
