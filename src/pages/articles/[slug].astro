@@ -1,6 +1,12 @@
-﻿---
+---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadArticles } from "../../lib/blog.js";
+
+type ArticleRow = ReturnType<typeof loadArticles>[number];
+
+interface ArticlePageProps {
+  article?: ArticleRow;
+}
 
 export const prerender = true;
 
@@ -12,7 +18,8 @@ export function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
-const article = Astro.props.article || loadArticles("desc").find((item) => item.slug === slug);
+const props = Astro.props as ArticlePageProps;
+const article = props.article || loadArticles("desc").find((item) => item.slug === slug);
 if (!article) {
   Astro.response.status = 404;
 }

@@ -3,6 +3,56 @@ import { join } from "node:path";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { marked } from "marked";
 
+/**
+ * @typedef {object} ArticleRow
+ * @property {string} slug
+ * @property {string} title
+ * @property {string} date
+ * @property {string} summary
+ * @property {string} content
+ * @property {string} contentHtml
+ * @property {string[]} tags
+ * @property {string} cover
+ * @property {boolean} draft
+ * @property {number} mtime
+ */
+
+/**
+ * @typedef {object} BookRow
+ * @property {string} slug
+ * @property {string} title
+ * @property {string} monthRaw
+ * @property {string} date
+ * @property {string} monthLabel
+ * @property {string} cover
+ * @property {string[]} coverCandidates
+ * @property {string} coverFallback
+ * @property {string[]} tags
+ * @property {string} reviewText
+ * @property {string} reviewHtml
+ */
+
+/**
+ * @typedef {object} SteamGameRow
+ * @property {number} appId
+ * @property {string} name
+ * @property {number} playtimeHours
+ * @property {number} recentHours
+ * @property {string} coverUrl
+ * @property {number} [monthHours]
+ * @property {number} [ratio]
+ */
+
+/**
+ * @typedef {object} LoadArticlesOptions
+ * @property {boolean} [includeDraft]
+ */
+
+/**
+ * @typedef {object} FetchSteamGamesOptions
+ * @property {boolean} [fastMode]
+ */
+
 export const SITE_PROFILE = {
   nickname: "Micah Hale",
   avatarText: "M",
@@ -51,7 +101,9 @@ const STEAM_PAGE_FETCH_TIMEOUT_MS = 3_500;
 const STEAM_SYNC_FETCH_RETRY_TIMES = 3;
 const STEAM_SYNC_FETCH_TIMEOUT_MS = 20_000;
 const steamOwnedGamesCache = new Map();
+/** @type {ArticleRow[] | null} */
 let articleRowsCache = null;
+/** @type {BookRow[] | null} */
 let bookRowsCache = null;
 
 const ARTICLE_COVER_BY_SLUG = {
@@ -172,6 +224,11 @@ function parseDraft(rawValue) {
 function normalizeArticleDate(rawValue) {
   const value = String(rawValue || "").trim();
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "1970-01-01";
+}
+
+function normalizeOptionalDate(rawValue) {
+  const value = String(rawValue || "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
 }
 
 function resolveArticleCover(rawCover, slug) {
@@ -323,6 +380,11 @@ function renderMarkdown(input) {
   return marked.parse(String(input || ""));
 }
 
+/**
+ * @param {"asc" | "desc"} [order]
+ * @param {LoadArticlesOptions} [options]
+ * @returns {ArticleRow[]}
+ */
 export function loadArticles(order = "desc", options = {}) {
   const includeDraft = Boolean(options.includeDraft);
   if (!articleRowsCache) {
@@ -365,6 +427,10 @@ export function loadArticles(order = "desc", options = {}) {
   return visibleRows;
 }
 
+/**
+ * @param {"asc" | "desc"} [order]
+ * @returns {BookRow[]}
+ */
 export function loadBooks(order = "desc") {
   if (!bookRowsCache) {
     const rows = [];
@@ -373,6 +439,7 @@ export function loadBooks(order = "desc") {
       if (slug.toLowerCase() === "readme") continue;
       const { metadata, body } = parseFrontMatter(String(rawText || ""));
       const monthRaw = metadata.month || "未知月份";
+      const date = normalizeOptionalDate(metadata.date);
       const bookTitle = metadata.title || slug.replace(/-/g, " ");
       const parsedTags = parseTags(metadata.tags);
       const coverInfo = findBookCover(slug, bookTitle, monthRaw);
@@ -380,6 +447,7 @@ export function loadBooks(order = "desc") {
         slug,
         title: bookTitle,
         monthRaw,
+        date,
         monthLabel: formatMonthLabel(monthRaw),
         cover: coverInfo.cover,
         coverCandidates: coverInfo.coverCandidates,
@@ -400,6 +468,12 @@ export function loadBooks(order = "desc") {
   return rows;
 }
 
+/**
+ * @template {Record<string, unknown>} T
+ * @param {T[]} items
+ * @param {keyof T} keyName
+ * @returns {{ monthRaw: string, monthLabel: string, items: T[] }[]}
+ */
 export function groupByMonth(items, keyName) {
   const seen = [];
   const buckets = new Map();
@@ -1241,6 +1315,12 @@ async function fetchSteamOwnedCards(apiKey, steamId, options = {}) {
   });
 }
 
+/**
+ * @param {"month" | "total"} sortBy
+ * @param {string} monthKey
+ * @param {FetchSteamGamesOptions} [options]
+ * @returns {Promise<{ games: SteamGameRow[], notice: string }>}
+ */
 export async function fetchSteamGames(sortBy, monthKey, options = {}) {
   const sortMode = sortBy === "total" ? "total" : "month";
   const fastMode = Boolean(options.fastMode);
@@ -1458,10 +1538,14 @@ export async function buildDashboardData(monthParam, dayParam) {
   const allBooks = loadBooks("desc");
   const steamSources = loadSteamSources();
   const steamResult = await steamPromise;
+  const todayKey = steamTodayKey();
+  const todayMonth = todayKey.slice(0, 7);
 
   const monthArticles = allArticles.filter((item) => item.date.startsWith(selectedMonth));
   const monthBooks = allBooks.filter((item) => item.monthRaw === selectedMonth);
   const monthGames = steamResult.games.filter((item) => Number(item.monthHours || 0) > 0);
+  const todayArticles = allArticles.filter((item) => item.date === todayKey).length;
+  const todayBooks = allBooks.filter((item) => item.date === todayKey).length;
 
   let selectedDay = dayParam || "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDay) || !selectedDay.startsWith(selectedMonth)) {
@@ -1480,6 +1564,16 @@ export async function buildDashboardData(monthParam, dayParam) {
 
   const monthGameHours = Math.round(monthGames.reduce((sum, item) => sum + Number(item.monthHours || 0), 0) * 10) / 10;
   const totalGameHours = Math.round(steamResult.games.reduce((sum, item) => sum + Number(item.playtimeHours || 0), 0) * 10) / 10;
+  const todayGameAnalysis = analyzeMonthSnapshots(
+    steamSources.dailySnapshots,
+    todayMonth,
+    buildTotalsMapFromGames(steamResult.games)
+  );
+  const todayGameMinutes = Object.values(todayGameAnalysis.dayTotals[todayKey] || {}).reduce(
+    (sum, value) => sum + Number(value || 0),
+    0
+  );
+  const todayGameHours = minutesToHours(todayGameMinutes) || 0;
 
   const tagCounter = new Map();
   for (const article of monthArticles) {
@@ -1522,8 +1616,11 @@ export async function buildDashboardData(monthParam, dayParam) {
     statTotalBooks: allBooks.length,
     statMonthArticles: monthArticles.length,
     statMonthBooks: monthBooks.length,
+    statTodayArticles: todayArticles,
+    statTodayBooks: todayBooks,
     statTotalGameHours: totalGameHours,
     statMonthGameHours: monthGameHours,
+    statTodayGameHours: todayGameHours,
     statActiveGames: monthGames.filter((item) => Number(item.monthHours || 0) >= 30).length,
     dailyAxisMax: axisMax,
     dailyAxisMid: axisMid,
@@ -1556,8 +1653,3 @@ export function renderDayArticlePanel(selectedDayLabel, calendarArticles) {
 
   return `${titleHtml}<div class="day-article-grid">${cards}</div>`;
 }
-
-
-
-
-

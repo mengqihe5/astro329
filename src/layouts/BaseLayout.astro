@@ -42,7 +42,6 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
-    <link rel="preload" as="video" href="/app01/backgrounds/水边倒影-水波纹.mp4" type="video/mp4" />
     <link rel="stylesheet" href="/app01/style.css" />
     <style is:inline>
       html { opacity: 1; }
@@ -58,7 +57,8 @@ const resolvedOgImage = ogImage ? new URL(String(ogImage), baseUrl).toString() :
       muted
       loop
       playsinline
-      preload="auto"
+      preload="metadata"
+      poster="/app01/backgrounds/site-bg.png"
       aria-hidden="true"
     >
       <source src="/app01/backgrounds/水边倒影-水波纹.mp4" type="video/mp4" />

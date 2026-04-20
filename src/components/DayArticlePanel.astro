@@ -1,5 +1,14 @@
 ---
-const { selectedDayLabel, calendarArticles } = Astro.props;
+import { loadArticles } from "../lib/blog.js";
+
+type ArticleRow = ReturnType<typeof loadArticles>[number];
+
+interface Props {
+  selectedDayLabel: string;
+  calendarArticles: ArticleRow[];
+}
+
+const { selectedDayLabel, calendarArticles } = Astro.props as Props;
 ---
 <h4>{selectedDayLabel}</h4>
 <div class="day-article-grid">

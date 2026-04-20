@@ -1,6 +1,14 @@
-﻿---
-const { article } = Astro.props;
-const tags = Array.isArray(article?.tags) && article.tags.length > 0 ? article.tags : ["未分类"];
+---
+import { loadArticles } from "../lib/blog.js";
+
+type ArticleRow = ReturnType<typeof loadArticles>[number];
+
+interface Props {
+  article: ArticleRow;
+}
+
+const { article } = Astro.props as Props;
+const tags: string[] = Array.isArray(article?.tags) && article.tags.length > 0 ? article.tags : ["未分类"];
 ---
 <a href={`/articles/${article.slug}/`} class="card card-link article-card">
   <div class="card-media article-media">

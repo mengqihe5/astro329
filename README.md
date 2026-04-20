@@ -11,6 +11,12 @@ npm run dev
 
 默认地址：`http://localhost:4321`
 
+建议在提交或部署前先运行：
+
+```bash
+npm run check
+```
+
 ## 2. 内容目录
 
 - 文章：`content/articles/*.md`

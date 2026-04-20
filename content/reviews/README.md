@@ -1,10 +1,14 @@
 ﻿# 书架最简新增流程
 
 1. 在 `content/reviews/` 新建一个 `slug.md` 文件。
-2. 在 md 顶部写两行元数据：
+2. 在 md 顶部写基础元数据：
 
    title: 书名
    month: YYYY-MM
+
+   可选补充：
+
+   date: YYYY-MM-DD
 
 3. 二选一：
 

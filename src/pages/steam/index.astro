@@ -1,6 +1,8 @@
-﻿---
+---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { fetchSteamGames, resolveMonth, formatMonthCompact, getMonthBounds, buildMonthRangeOptions } from "../../lib/blog.js";
+
+type SteamGame = Awaited<ReturnType<typeof fetchSteamGames>>["games"][number];
 
 const params = Astro.url.searchParams;
 const sortBy = params.get("sort") === "total" ? "total" : "month";
@@ -12,7 +14,7 @@ const switchToMonthUrl = `/steam/?sort=month&month=${currentMonth}`;
 const monthOptions = buildMonthRangeOptions(minMonth, maxMonth);
 
 const steamResult = await fetchSteamGames(sortBy, selectedMonth);
-const games = steamResult.games;
+const games: SteamGame[] = steamResult.games;
 ---
 <BaseLayout
   title="游戏 | Steam 记录"

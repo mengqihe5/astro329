@@ -1,6 +1,12 @@
-﻿---
+---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadBooks } from "../../lib/blog.js";
+
+type BookRow = ReturnType<typeof loadBooks>[number];
+
+interface BookPageProps {
+  book?: BookRow;
+}
 
 export const prerender = true;
 
@@ -12,7 +18,8 @@ export function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
-const book = Astro.props.book || loadBooks("desc").find((item) => item.slug === slug);
+const props = Astro.props as BookPageProps;
+const book = props.book || loadBooks("desc").find((item) => item.slug === slug);
 if (!book) {
   Astro.response.status = 404;
 }

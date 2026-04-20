@@ -1,12 +1,18 @@
-﻿---
+---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadArticles } from "../../lib/blog.js";
 
+type ArticleRow = ReturnType<typeof loadArticles>[number];
+type ArticlesQuery = {
+  year?: string;
+  tag?: string;
+};
+
 const params = Astro.url.searchParams;
 
-const allArticles = loadArticles("desc");
-const allTags = [...new Set(allArticles.flatMap((article) => article.tags || []))].sort((a, b) => a.localeCompare(b));
-const allYears = [...new Set(allArticles.map((article) => String(article.date).slice(0, 4)).filter((year) => /^\d{4}$/.test(year)))]
+const allArticles: ArticleRow[] = loadArticles("desc");
+const allTags: string[] = [...new Set(allArticles.flatMap((article) => article.tags || []))].sort((a, b) => a.localeCompare(b));
+const allYears: string[] = [...new Set(allArticles.map((article) => String(article.date).slice(0, 4)).filter((year) => /^\d{4}$/.test(year)))]
   .sort((a, b) => Number(b) - Number(a));
 
 const yearRaw = params.get("year") || "all";
@@ -31,7 +37,7 @@ const filteredArticles = allArticles.filter((article) => {
   return yearMatch && tagMatch;
 });
 
-function toArticlesUrl(next) {
+function toArticlesUrl(next: ArticlesQuery) {
   const nextParams = new URLSearchParams();
   const yearValue = typeof next.year === "string" ? next.year : selectedYear;
   const tagValue = typeof next.tag === "string" ? next.tag : selectedTag;

@@ -1,21 +1,27 @@
-﻿---
+---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { loadBooks, groupByMonth } from "../../lib/blog.js";
 import BookCard from "../../components/BookCard.astro";
+
+type BookRow = ReturnType<typeof loadBooks>[number];
+type TagGroup = {
+  tag: string;
+  items: BookRow[];
+};
 
 const params = Astro.url.searchParams;
 const modeRaw = params.get("mode") || "all";
 const mode = ["all", "timeline", "tag"].includes(modeRaw) ? modeRaw : "all";
 const order = params.get("order") === "asc" ? "asc" : "desc";
 
-const books = loadBooks(order);
-const allTags = [...new Set(books.flatMap((book) => book.tags || []))].sort((a, b) => a.localeCompare(b));
+const books: BookRow[] = loadBooks(order);
+const allTags: string[] = [...new Set(books.flatMap((book) => book.tags || []))].sort((a, b) => a.localeCompare(b));
 const selectedTagRaw = params.get("tag") || "all";
 const selectedTag = selectedTagRaw !== "all" && allTags.includes(selectedTagRaw) ? selectedTagRaw : "all";
 
 const bookTimeline = groupByMonth(books, "monthRaw");
 
-let tagGroups = [];
+let tagGroups: TagGroup[] = [];
 if (mode === "tag") {
   if (allTags.length === 0) {
     tagGroups = [{ tag: "未分类", items: books }];
